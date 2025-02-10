@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "iH5Zj1TMic9uAbff0Ozt7aYQBlPbcHp8e24l2F+Yeps=",
+  "Source": "APIMonitor.server",
+  "BasePath": "_content/APIMonitor.server",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}
