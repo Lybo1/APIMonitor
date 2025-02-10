@@ -29,7 +29,6 @@
 
     <ItemGroup>
       <Folder Include="Controllers\" />
-      <Folder Include="Identity\Services\" />
       <Folder Include="Models\" />
       <Folder Include="Services\" />
     </ItemGroup>

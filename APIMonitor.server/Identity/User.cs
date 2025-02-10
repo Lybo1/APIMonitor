@@ -26,7 +26,7 @@ public class User : IdentityUser
     [Range(0, 3, ErrorMessage = "Failed login attempts cannot be negative.")]
     public int FailedLoginAttempts { get; set; } = 0;
 
-    public bool RememberMe { get; set; } = false;
+    public bool RememberMe { get; set; }
     public bool IsLockedOut { get; set; } = false;
     public bool IsAdmin { get; set; } = false;
 }
