@@ -1,16 +1,17 @@
 using APIMonitor.server.Data;
 using APIMonitor.server.Identity;
+using APIMonitor.server.Identity.Seeding;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// 🔹 Configure Identity for Authentication
 builder.Services.AddIdentityCore<User>(options =>
 {
     options.Password.RequireDigit = true;
@@ -42,12 +43,19 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddSignalR();
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+}
+
+using (IServiceScope scope = app.Services.CreateScope())
+{
+    RoleManager<IdentityRole> roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    
+    await RoleFactory.SeedRoles(roleManager);
 }
 
 app.UseCors("AllowFrontend");

@@ -1,3 +1,5 @@
+using APIMonitor.server.Identity.Services.RoleServices;
+using APIMonitor.server.Identity.Services.TokenServices;
 using APIMonitor.server.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -8,17 +10,18 @@ namespace APIMonitor.server.Identity.Controllers;
 [Route("api/[controller]")]
 public class RegisterController : ControllerBase
 {
-    private readonly RoleManager<IdentityRole> roleManager;
     private readonly UserManager<User> userManager;
+    private readonly IRoleService roleService;
+    private readonly ITokenService tokenService;
 
-    public RegisterController(RoleManager<IdentityRole> roleManager, UserManager<User> userManager)
+    public RegisterController(UserManager<User> userManager, IRoleService roleService, ITokenService tokenService)
     {
-        this.roleManager = roleManager;
-        this.userManager = userManager;
+        this.userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+        this.roleService = roleService ?? throw new ArgumentNullException(nameof(roleService));
+        this.tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
     }
 
     [HttpPost("register")]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Register([FromBody] RegisterViewModel model)
     {
         if (!ModelState.IsValid)
@@ -28,7 +31,7 @@ public class RegisterController : ControllerBase
         
         User currentUser = await userManager.FindByEmailAsync(model.Email);
 
-        if (currentUser != null)
+        if (currentUser is not null)
         {
             return BadRequest("Email is already taken.");
         }
@@ -49,24 +52,29 @@ public class RegisterController : ControllerBase
             return BadRequest($"User creation failed: {errors}");
         }
 
-        IdentityRole? userRole = await roleManager.FindByNameAsync("User");
-
-        if (userRole == null)
-        {
-            userRole = new IdentityRole("User");
-            
-            await roleManager.CreateAsync(userRole);
-        }
-        
-        IdentityResult roleResult = await userManager.AddToRoleAsync(user, "User");
+        IdentityResult roleResult = await roleService.CreateRoleAsync("User");
 
         if (!roleResult.Succeeded)
         {
             string errors = string.Join(", ", roleResult.Errors.Select(e => e.Description));
             
-            return BadRequest($"Failed to assign role: {errors}");
+            return BadRequest($"Role creation failed: {errors}");
         }
         
-        return Ok("User created successfully.");
+        await userManager.AddToRoleAsync(user, "User");
+        
+        string accessToken = await tokenService.GenerateShortLivedAccessToken(user);
+        string refreshToken = await tokenService.GenerateLongLivedRefreshToken(user);
+        
+        tokenService.IssueShortLivedAccessToken(accessToken);
+        tokenService.IssueLongLivedRefreshToken(refreshToken);
+
+        return Ok(
+            new
+            {
+                AccessToken = accessToken,
+                RefreshToken = refreshToken
+            }
+        );
     }
 }

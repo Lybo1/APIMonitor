@@ -1,0 +1,23 @@
+namespace APIMonitor.server.Data;
+
+public static class Constants
+{
+    public const int DefaultAccessTokenExpirationMinutes = 60;
+    public const int RememberMeAccessTokenExpirationMinutes = 43200;
+    public const int RefreshTokenExpirationDays = 60;
+    public const int RefreshTokenLength = 500;
+    
+    public const int UsernameMaxLength = 50;
+    public const int FirstNameMinLength = 3;
+    public const int FirstNameMaxLength = 50;
+    public const int LastNameMinLength = 3;
+    public const int LastNameMaxLength = 50;
+    public const int MaxLoginAttempts = 3;
+    public const int PasswordMinLength = 6;
+    public const int PasswordMaxLength = 100;
+    
+    public const int DefaultPageSize = 50;
+    public const int MaxPageSize = 100;
+    public const int DefaultRateLimitThreshold = 1000;
+    public const int DefaultErrorSpikeThreshold = 50;
+}
