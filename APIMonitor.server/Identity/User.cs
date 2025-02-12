@@ -19,9 +19,16 @@ public class User : IdentityUser
     
     [NotMapped]
     public string FullName => $"{FirstName} {LastName}";
+    
+    [MaxLength(500)]
+    public string? RefreshToken { get; set; }
 
     [DataType(DataType.DateTime)]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    
+    [DataType(DataType.DateTime)]
+    [Required(ErrorMessage = "Refresh token expiry date is required.")]
+    public DateTime RefreshTokenExpiry { get; set; }
 
     [Range(0, 3, ErrorMessage = "Failed login attempts cannot be negative.")]
     public int FailedLoginAttempts { get; set; } = 0;
