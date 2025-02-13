@@ -8,6 +8,5 @@ public enum AuditActionType
     Delete,
     Login,
     Logout,
-    ConfigurationChange,
-    RoleAssignment
+    ConfigurationChange
 }
