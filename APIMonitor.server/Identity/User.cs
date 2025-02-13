@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace APIMonitor.server.Identity;
 
-public class User : IdentityUser
+public class User : IdentityUser<int>
 {
     [Required]
     [StringLength(50, MinimumLength = 2, ErrorMessage = "First name must be between 2 and 50 characters.")]

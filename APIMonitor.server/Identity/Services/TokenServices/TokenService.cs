@@ -32,7 +32,7 @@ public class TokenService
         
         List<Claim> claims = new()
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, user.Email!),
             new Claim("isAdmin", user.IsAdmin.ToString().ToLower()),
             new Claim("rememberMe", user.RememberMe.ToString().ToLower()),
