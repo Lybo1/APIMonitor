@@ -15,9 +15,11 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<int>, i
     }
     
     public DbSet<AlertRule> AlertRules { get; set; }
+    public DbSet<ApiMetrics> ApiMetrics { get; set; }
     public DbSet<ApiRequestLog> ApiRequestLogs { get; set; }
     public DbSet<EventLog> EventLogs { get; set; }
     public DbSet<IpBlock> IpBlocks { get; set; }
+    public DbSet<RequestStatistics> RequestStatistics { get; set; }
     public DbSet<ThreatAlert> ThreatAlerts { get; set; }
     public DbSet<TokenResponse> TokenResponses { get; set; }
 }
