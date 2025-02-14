@@ -4,7 +4,7 @@ namespace APIMonitor.server.Identity.Seeding;
 
 public static class RoleFactory
 {
-    public static async Task SeedRoles(RoleManager<IdentityRole> roleManager)
+    public static async Task SeedRoles(RoleManager<IdentityRole<int>> roleManager)
     {
         string[] roles = { "Admin", "User" };
 
@@ -12,7 +12,7 @@ public static class RoleFactory
         {
             if (!await roleManager.RoleExistsAsync(role))
             {
-                await roleManager.CreateAsync(new IdentityRole(role));
+                await roleManager.CreateAsync(new IdentityRole<int>(role));
             }
         }
     }
