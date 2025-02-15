@@ -43,11 +43,31 @@ public class NotificationService : INotificationService
         }
     }
 
-    public async Task<bool> SendNotificationAsync(string userId, string title, string message)
+    public async Task<bool> SendNotificationAsync(string userId, string title, string message, HttpContext context)
     {
        ArgumentException.ThrowIfNullOrWhiteSpace(userId);
        ArgumentException.ThrowIfNullOrWhiteSpace(message);
+       ArgumentException.ThrowIfNullOrWhiteSpace(title);
+       ArgumentNullException.ThrowIfNull(context);
+       
+       string? userIp = context.Items["UserIP"] as string;
+       string? userAgent = context.Items["UserAgent"] as string;
 
+       if (string.IsNullOrWhiteSpace(userIp) || string.IsNullOrWhiteSpace(userAgent))
+       {
+           return false;
+       }
+       
+       int userIdInt = Convert.ToInt32(userId);
+
+       bool isTrusted = await dbContext.TrustedDevices
+           .AnyAsync(d => d.UserId == userIdInt && d.IpAddress == userIp && userAgent == d.UserAgent);
+
+       if (!isTrusted)
+       {
+           return false;
+       }
+       
        if (LastNotificationTime.TryGetValue(userId, out DateTime lastSentTime))
        {
            if ((DateTime.UtcNow - lastSentTime).TotalSeconds < 30)
