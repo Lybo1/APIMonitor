@@ -28,5 +28,6 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<int>, i
     public DbSet<RequestStatistics> RequestStatistics { get; set; }
     public DbSet<ThreatAlert> ThreatAlerts { get; set; }
     public DbSet<TokenResponse> TokenResponses { get; set; }
+    public DbSet<TrustedDevice> TrustedDevices { get; set; }
     public DbSet<UserActivityLog> UserActivityLogs { get; set; }
 }

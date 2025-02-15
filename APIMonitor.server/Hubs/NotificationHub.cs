@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
@@ -13,15 +14,19 @@ public class NotificationHub : Hub
     
     public override async Task OnConnectedAsync()
     {
-        string userId = Context.UserIdentifier ?? throw new UnauthorizedAccessException("User ID missing.");
+        string userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException("User ID missing.");
         
         await Groups.AddToGroupAsync(Context.ConnectionId, userId);
+        await Clients.Caller.SendAsync("Connected", "Welcome! You are in the notification hub.");
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        string userId = Context.UserIdentifier ?? string.Empty;
-        
-        await Groups.RemoveFromGroupAsync(Context.ConnectionId, userId);
+        string userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+
+        if (!string.IsNullOrEmpty(userId))
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, userId);
+        }
     }
 }

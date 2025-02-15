@@ -34,7 +34,9 @@ public class NotificationController : ControllerBase
             return Unauthorized(new { message = "Invalid authentication." });
         }
 
-        List<Notification> notifications = await dbContext.Notifications.Where(n => n.UserId.ToString() == userId)
+        List<Notification> notifications = await dbContext.Notifications
+                                                          .AsNoTracking()
+                                                          .Where(n => n.UserId.ToString() == userId)
                                                           .OrderByDescending(n => n.CreatedAt)
                                                           .ToListAsync();
         
@@ -66,10 +68,5 @@ public class NotificationController : ControllerBase
         await dbContext.SaveChangesAsync();
         
         return Ok(new { message = "Notification marked as read." });
-    }
-
-    private string GetUserId()
-    {
-        return User.FindFirst(ClaimTypes.NameIdentifier) ?.Value ?? throw new UnauthorizedAccessException("User not authenticated.");
     }
 }

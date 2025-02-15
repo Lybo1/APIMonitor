@@ -1,9 +1,12 @@
 using System.Text;
 using APIMonitor.server.Data;
+using APIMonitor.server.Hubs;
 using APIMonitor.server.Identity;
 using APIMonitor.server.Identity.Seeding;
 using APIMonitor.server.Identity.Services.RoleServices;
 using APIMonitor.server.Identity.Services.TokenServices;
+using APIMonitor.server.Middleware;
+using APIMonitor.server.Services.NotificationsService;
 using AspNetCoreRateLimit;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
@@ -126,6 +129,9 @@ namespace APIMonitor.server
 
             builder.Services.AddScoped<ITokenService, TokenService>();
             builder.Services.AddScoped<IRoleService, RoleService>();
+            builder.Services.AddScoped<INotificationService, NotificationService>();
+
+            builder.Services.AddSignalR();
 
             builder.Services.AddMemoryCache();
             builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
@@ -193,6 +199,8 @@ namespace APIMonitor.server
                 });
             }
 
+            app.UseMiddleware<RequestInfoMiddleware>();
+
             app.UseSerilogRequestLogging();
             app.UseIpRateLimiting();
 
@@ -204,6 +212,7 @@ namespace APIMonitor.server
             app.UseAuthorization();
 
             app.MapControllers();
+            app.MapHub<NotificationHub>("/notifications");
         }
 
         private static async Task SeedRolesIfNeeded(WebApplication app)

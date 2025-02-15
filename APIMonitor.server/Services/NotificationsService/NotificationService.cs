@@ -1,8 +1,10 @@
+using System.Collections.Concurrent;
 using APIMonitor.server.Data;
 using APIMonitor.server.Hubs;
 using APIMonitor.server.Models;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace APIMonitor.server.Services.NotificationsService;
 
@@ -10,11 +12,15 @@ public class NotificationService : INotificationService
 {
     private readonly ApplicationDbContext dbContext;
     private readonly IHubContext<NotificationHub> hubContext;
+    private readonly IMemoryCache cache;
+    
+    private static readonly ConcurrentDictionary<string, DateTime> LastNotificationTime = new();
 
-    public NotificationService(ApplicationDbContext dbContext, IHubContext<NotificationHub> hubContext)
+    public NotificationService(ApplicationDbContext dbContext, IHubContext<NotificationHub> hubContext, IMemoryCache cache)
     {
         this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         this.hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
+        this.cache = cache ?? throw new ArgumentNullException(nameof(cache));
     }
     
     public async Task<List<Notification>> GetUserNotifications(string userId, bool onlyUnread)
@@ -37,23 +43,35 @@ public class NotificationService : INotificationService
         }
     }
 
-    public async Task SendNotificationAsync(string userId, string title, string message)
+    public async Task<bool> SendNotificationAsync(string userId, string title, string message)
     {
-       ArgumentNullException.ThrowIfNull(userId);
-       ArgumentNullException.ThrowIfNull(message);
+       ArgumentException.ThrowIfNullOrWhiteSpace(userId);
+       ArgumentException.ThrowIfNullOrWhiteSpace(message);
 
+       if (LastNotificationTime.TryGetValue(userId, out DateTime lastSentTime))
+       {
+           if ((DateTime.UtcNow - lastSentTime).TotalSeconds < 30)
+           {
+               return false;
+           }
+       }
+       
        Notification notification = new()
        {
            UserId = Convert.ToInt32(userId),
            Title = title,
            Message = message,
-           IsRead = false,
-           CreatedAt = DateTime.UtcNow
+           CreatedAt = DateTime.UtcNow,
+           IsRead = false
        };
        
        await dbContext.Notifications.AddAsync(notification);
        await dbContext.SaveChangesAsync();
        
+       LastNotificationTime[userId] = DateTime.UtcNow;
+       
        await hubContext.Clients.Group(userId).SendAsync("ReceiveNotification", title, message);
+       
+       return true;
     }
 }
