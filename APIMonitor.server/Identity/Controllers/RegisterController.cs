@@ -22,7 +22,72 @@ public class RegisterController : ControllerBase
     }
 
     [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] RegisterViewModel model)
+    public async Task<IActionResult> Register([FromBody] RegisterViewModel? model)
     {
+        if (model is null || string.IsNullOrWhiteSpace(model.Email) || string.IsNullOrWhiteSpace(model.Password))
+        {
+            return BadRequest(new { message = "Invalid registration details." });
+        }
+        
+        User existingUser = await userManager.FindByEmailAsync(model.Email);
+
+        if (existingUser is not null)
+        {
+            return Conflict(new { message = "Email is already taken." });
+        }
+
+        User newUser = new User
+        {
+            UserName = model.Email,
+            Email = model.Email,
+            RememberMe = model.RememberMe,
+        };
+        
+        IdentityResult result = await userManager.CreateAsync(newUser, model.Password);
+
+        if (!result.Succeeded)
+        {
+            string errors = string.Join(',', result.Errors.Select(e => e.Description));
+            
+            return BadRequest(new { message = errors });
+        }
+
+        string defaultRole = "User";
+        
+        bool isInRole = await userManager.IsInRoleAsync(newUser, defaultRole);
+
+        if (!isInRole)
+        {
+            IdentityRole? existingRole = await roleService.GetAllRolesAsync()
+                                                          .ContinueWith(t => t.Result.FirstOrDefault(r => r.Name == defaultRole));
+
+            if (existingRole is null)
+            {
+                IdentityResult roleCreateResult = await roleService.CreateRoleAsync(defaultRole);
+
+                if (!roleCreateResult.Succeeded)
+                {
+                    return StatusCode(500, new { message = $"Failed to create role {defaultRole}." });
+                }
+            }
+            
+            await userManager.AddToRoleAsync(newUser, defaultRole);
+        }
+        
+        string accessToken = await tokenService.GenerateShortLivedAccessToken(newUser);
+        string refreshToken = await tokenService.GenerateLongLivedRefreshToken(newUser);
+
+        if (model.RememberMe)
+        {
+            tokenService.IssueShortLivedAccessToken(accessToken);
+            tokenService.IssueLongLivedRefreshToken(refreshToken);
+        }
+
+        return Ok(new
+        {
+            message = "User registered successfully.",
+            accessToken = model.RememberMe ? null : accessToken,
+            refreshToken = model.RememberMe ? null : refreshToken
+        });
     }
 }

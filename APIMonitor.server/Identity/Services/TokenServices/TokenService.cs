@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using APIMonitor.server.Data;
 using APIMonitor.server.Models;
+using APIMonitor.server.Services.SecurityService;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -18,13 +19,20 @@ public class TokenService : ITokenService
     private readonly IHttpContextAccessor httpContextAccessor;
     private readonly IMemoryCache memoryCache;
     private readonly JwtSecurityTokenHandler handler;
+    private readonly ISecurityEventService securityEventService;
 
-    public TokenService(UserManager<User> userManager, IConfiguration configuration, IHttpContextAccessor httpContextAccessor, IMemoryCache memoryCache)
+    public TokenService(UserManager<User> userManager, 
+                        IConfiguration configuration, 
+                        IHttpContextAccessor httpContextAccessor, 
+                        IMemoryCache memoryCache, 
+                        ISecurityEventService securityEventService
+    )
     {
         this.userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         this.httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         this.memoryCache = memoryCache ?? throw new ArgumentNullException(nameof(memoryCache));
+        this.securityEventService = securityEventService ?? throw new ArgumentNullException(nameof(securityEventService));
         this.handler = new JwtSecurityTokenHandler();
     }
     
@@ -83,26 +91,45 @@ public class TokenService : ITokenService
 
     public async Task<TokenResponse> RefreshTokenAsync(string refreshToken)
     {
-        if (string.IsNullOrEmpty(refreshToken))
-        {
-            throw new SecurityTokenException("Invalid refresh token");
-        }
+        ArgumentException.ThrowIfNullOrWhiteSpace(refreshToken, "Invalid refresh token.");
 
-        User user = (await userManager.Users.FirstOrDefaultAsync(u => u.RefreshToken == EncryptRefreshToken(refreshToken)))!;
-
-        if (user == null || user.RefreshTokenExpiry < DateTime.UtcNow)
+        string? ipAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
+        string? userAgent = httpContextAccessor.HttpContext?.Request.Headers.UserAgent.ToString();
+        
+        if (ipAddress is null || userAgent is null)
         {
-            throw new SecurityTokenException("Invalid refresh token");
+            throw new SecurityTokenException("Could not verify client identity.");
         }
         
+        string refreshTokenHash = EncryptRefreshToken(refreshToken);
+
+        User? user = await userManager.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshTokenHash);
+
+        if (user is null || user.RefreshTokenExpiry < DateTime.UtcNow)
+        {
+            throw new SecurityTokenException("Invalid or expired refresh token.");
+        }
+
+        if (memoryCache.TryGetValue($"refresh_meta_{refreshTokenHash}", out dynamic? storedMeta))
+        {
+            string storedIp = storedMeta!.IP;
+            string storedUserAgent = storedMeta.UserAgent;
+
+            if (storedIp != ipAddress || storedUserAgent != userAgent)
+            {
+                await RevokeRefreshTokenAsync(user);
+                securityEventService.TriggerSuspiciousLogin(user.Id.ToString(), ipAddress, userAgent);
+
+                throw new SecurityTokenException("Suspicious login detected. Please re-authenticate.");
+            }
+        }
+
         string newAccessToken = await GenerateShortLivedAccessToken(user);
         string newRefreshToken = await GenerateLongLivedRefreshToken(user);
 
-        return new TokenResponse
-        {
-            AccessToken = newAccessToken,
-            RefreshToken = newRefreshToken,
-        };
+        memoryCache.Set($"refresh_meta_{EncryptRefreshToken(newRefreshToken)}", new { IP = ipAddress, UserAgent = userAgent }, TimeSpan.FromDays(Constants.RefreshTokenExpirationDays));
+
+        return new TokenResponse { AccessToken = newAccessToken, RefreshToken = newRefreshToken };
     }
     
     public async Task RevokeRefreshTokenAsync(User user)
@@ -113,6 +140,32 @@ public class TokenService : ITokenService
         await userManager.UpdateAsync(user);
     }
 
+    public void IssueShortLivedAccessToken(string accessToken)
+    {
+        ArgumentNullException.ThrowIfNull(accessToken, nameof(accessToken));
+        
+        httpContextAccessor.HttpContext?.Response.Cookies.Append("access_token", accessToken, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.None,
+            Expires = DateTime.UtcNow.AddMinutes(Constants.DefaultAccessTokenExpirationMinutes)
+        });
+    }
+
+    public void IssueLongLivedRefreshToken(string refreshToken)
+    {
+        ArgumentNullException.ThrowIfNull(refreshToken, nameof(refreshToken));
+
+        httpContextAccessor.HttpContext?.Response.Cookies.Append("refresh_token", refreshToken, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.None,
+            Expires = DateTime.UtcNow.AddDays(Constants.RefreshTokenExpirationDays)
+        });
+    }
+    
     private static string GenerateSecureToken()
     {
         byte[] randomNumber = new byte[32];

@@ -8,4 +8,6 @@ public interface ITokenService
     Task<string> GenerateLongLivedRefreshToken(User user);
     Task<TokenResponse> RefreshTokenAsync(string refreshToken);
     Task RevokeRefreshTokenAsync(User user);
+    void IssueShortLivedAccessToken(string accessToken);
+    void IssueLongLivedRefreshToken(string refreshToken);
 }

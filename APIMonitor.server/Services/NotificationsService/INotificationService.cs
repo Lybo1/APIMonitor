@@ -1,0 +1,10 @@
+using APIMonitor.server.Models;
+
+namespace APIMonitor.server.Services.NotificationsService;
+
+public interface INotificationService
+{
+    Task<List<Notification>> GetUserNotifications(string userId, bool onlyUnread);
+    Task MarkAsRead(Guid notificationId);
+    Task SendNotification(string userId, string message);
+}

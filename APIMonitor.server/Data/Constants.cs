@@ -18,6 +18,7 @@ namespace APIMonitor.server.Data
         public const int LastNameMinLength = 3;
         public const int MaxLoginAttempts = 3;
         public const int PasswordMinLength = 6;
+        public const int LockoutMinutes = 15;
         public const int UsernameMaxLength = 50;
         public const int FirstNameMaxLength = 50;
         public const int LastNameMaxLength = 50;
