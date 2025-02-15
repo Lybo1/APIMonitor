@@ -6,5 +6,5 @@ public interface INotificationService
 {
     Task<List<Notification>> GetUserNotifications(string userId, bool onlyUnread);
     Task MarkAsRead(Guid notificationId);
-    Task SendNotification(string userId, string message);
+    Task SendNotificationAsync(string userId, string title, string message);
 }

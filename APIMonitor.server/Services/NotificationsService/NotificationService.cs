@@ -37,18 +37,23 @@ public class NotificationService : INotificationService
         }
     }
 
-    public async Task SendNotification(string userId, string message)
+    public async Task SendNotificationAsync(string userId, string title, string message)
     {
-        Notification notification = new()
-        {
-            UserId = Convert.ToInt32(userId),
-            Message = message,
-        };
-        
-        dbContext.Notifications.Add(notification);
-        
-        await dbContext.SaveChangesAsync();
-        
-        await hubContext.Clients.User(userId).SendAsync("ReceiveNotification", notification);
+       ArgumentNullException.ThrowIfNull(userId);
+       ArgumentNullException.ThrowIfNull(message);
+
+       Notification notification = new()
+       {
+           UserId = Convert.ToInt32(userId),
+           Title = title,
+           Message = message,
+           IsRead = false,
+           CreatedAt = DateTime.UtcNow
+       };
+       
+       await dbContext.Notifications.AddAsync(notification);
+       await dbContext.SaveChangesAsync();
+       
+       await hubContext.Clients.Group(userId).SendAsync("ReceiveNotification", title, message);
     }
 }
