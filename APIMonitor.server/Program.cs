@@ -6,7 +6,9 @@ using APIMonitor.server.Identity.Seeding;
 using APIMonitor.server.Identity.Services.RoleServices;
 using APIMonitor.server.Identity.Services.TokenServices;
 using APIMonitor.server.Middleware;
+using APIMonitor.server.Services.MacAddressService;
 using APIMonitor.server.Services.NotificationsService;
+using APIMonitor.server.Services.RateLimitService;
 using AspNetCoreRateLimit;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
@@ -130,6 +132,8 @@ namespace APIMonitor.server
             builder.Services.AddScoped<ITokenService, TokenService>();
             builder.Services.AddScoped<IRoleService, RoleService>();
             builder.Services.AddScoped<INotificationService, NotificationService>();
+            builder.Services.AddScoped<IRateLimitService, RateLimitService>();
+            builder.Services.AddScoped<IMacAddressService, MacAddressService>();
 
             builder.Services.AddSignalR();
 

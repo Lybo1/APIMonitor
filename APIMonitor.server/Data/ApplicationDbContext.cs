@@ -24,6 +24,7 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<int>, i
     public DbSet<IpBlock> IpBlocks { get; set; }
     public DbSet<IpGeolocation> IpGeolocations { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<NotificationPreference> NotificationPreferences { get; set; }
     public DbSet<RateLimitRule> RateLimitRules { get; set; }
     public DbSet<RequestStatistics> RequestStatistics { get; set; }
     public DbSet<ThreatAlert> ThreatAlerts { get; set; }

@@ -8,6 +8,10 @@ public class RateLimitRule
     public int Id { get; set; }
     
     [Required]
+    [StringLength(150)]
+    public string Action { get; set; } = string.Empty;
+    
+    [Required]
     [StringLength(Constants.Ipv4AddressLength, ErrorMessage = "Ip address length cannot exceed 15 characters.")]
     public string IpAddress { get; set; } = null!;
     

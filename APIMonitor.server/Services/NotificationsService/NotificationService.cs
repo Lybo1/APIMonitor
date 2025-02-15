@@ -43,7 +43,7 @@ public class NotificationService : INotificationService
         }
     }
 
-    public async Task<bool> SendNotificationAsync(string userId, string title, string message, HttpContext context)
+    public async Task<bool> SendNotificationAsync(string userId, string title, string message, HttpContext context, bool isCritical = false)
     {
        ArgumentException.ThrowIfNullOrWhiteSpace(userId);
        ArgumentException.ThrowIfNullOrWhiteSpace(message);
@@ -61,11 +61,32 @@ public class NotificationService : INotificationService
        int userIdInt = Convert.ToInt32(userId);
 
        bool isTrusted = await dbContext.TrustedDevices
-           .AnyAsync(d => d.UserId == userIdInt && d.IpAddress == userIp && userAgent == d.UserAgent);
+                                       .AnyAsync(d => d.UserId == userIdInt && d.IpAddress == userIp && userAgent == d.UserAgent);
 
        if (!isTrusted)
        {
            return false;
+       }
+
+       NotificationPreference? preferences = await dbContext.NotificationPreferences
+                                                            .FirstOrDefaultAsync(p => p.UserId == userIdInt);
+
+       if (preferences is not null)
+       {
+           if (preferences.EnableCriticalAlertsOnly && !isCritical)
+           {
+               return false;
+           }
+       }
+       else
+       {
+           preferences = new NotificationPreference()
+           {
+               UserId = userIdInt,
+           };
+           
+           await dbContext.NotificationPreferences.AddAsync(preferences);
+           await dbContext.SaveChangesAsync();
        }
        
        if (LastNotificationTime.TryGetValue(userId, out DateTime lastSentTime))

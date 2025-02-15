@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "REwKGl8I/TE=",
+  "dgSpecHash": "vpueNaIcHbM=",
   "success": true,
   "projectFilePath": "/home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/APIMonitor.server.csproj",
   "expectedPackageFiles": [
@@ -20,6 +20,7 @@
     "/home/lyuboslav/.nuget/packages/fluentvalidation.aspnetcore/11.3.0/fluentvalidation.aspnetcore.11.3.0.nupkg.sha512",
     "/home/lyuboslav/.nuget/packages/fluentvalidation.dependencyinjectionextensions/11.5.1/fluentvalidation.dependencyinjectionextensions.11.5.1.nupkg.sha512",
     "/home/lyuboslav/.nuget/packages/humanizer.core/2.14.1/humanizer.core.2.14.1.nupkg.sha512",
+    "/home/lyuboslav/.nuget/packages/ipinfo/3.0.1/ipinfo.3.0.1.nupkg.sha512",
     "/home/lyuboslav/.nuget/packages/mailkit/4.10.0/mailkit.4.10.0.nupkg.sha512",
     "/home/lyuboslav/.nuget/packages/microsoft.applicationinsights/2.22.0/microsoft.applicationinsights.2.22.0.nupkg.sha512",
     "/home/lyuboslav/.nuget/packages/microsoft.applicationinsights.aspnetcore/2.22.0/microsoft.applicationinsights.aspnetcore.2.22.0.nupkg.sha512",

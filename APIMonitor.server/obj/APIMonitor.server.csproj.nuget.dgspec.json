@@ -76,6 +76,10 @@
               "target": "Package",
               "version": "[11.3.0, )"
             },
+            "IPinfo": {
+              "target": "Package",
+              "version": "[3.0.1, )"
+            },
             "MailKit": {
               "target": "Package",
               "version": "[4.10.0, )"

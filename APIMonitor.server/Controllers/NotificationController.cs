@@ -25,13 +25,13 @@ public class NotificationController : ControllerBase
 
     [Authorize]
     [HttpGet("user")]
-    public async Task<IActionResult> GetUserNotifications([FromHeader(Name = "Authorization")] string token)
+    public async Task<IActionResult> GetUserNotifications([FromHeader(Name = "Authorization")] string token, HttpContext context)
     {
-        string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        string userId = GetUserId();
 
-        if (string.IsNullOrEmpty(userId))
+        if (!await ValidateUserRequest(context, userId))
         {
-            return Unauthorized(new { message = "Invalid authentication." });
+            return Unauthorized(new { message = "Untrusted device or suspicious activity detected." });
         }
 
         List<Notification> notifications = await dbContext.Notifications
@@ -45,13 +45,14 @@ public class NotificationController : ControllerBase
 
     [Authorize]
     [HttpPost("mark-as-read")]
-    public async Task<IActionResult> MarkAsRead([FromBody] int notificationId)
+    public async Task<IActionResult> MarkAsRead([FromBody] int notificationId, HttpContext context)
     {
-        string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        string? userId = GetUserId();
 
-        if (string.IsNullOrEmpty(userId))
+        if (!await ValidateUserRequest(context, userId))
         {
-            return Unauthorized(new { message = "Invalid authentication." });
+            return Unauthorized(new { message = "Untrusted device or suspicious activity detected." });
+            
         }
         
         int userIntId = Convert.ToInt32(userId);
@@ -68,5 +69,43 @@ public class NotificationController : ControllerBase
         await dbContext.SaveChangesAsync();
         
         return Ok(new { message = "Notification marked as read." });
+    }
+
+    [HttpPost("send-test")]
+    public async Task<IActionResult> SendTestNotification([FromBody] string message, HttpContext context)
+    {
+        string userId = GetUserId();
+
+        if (!await ValidateUserRequest(context, userId))
+        {
+            return Unauthorized(new { message = "Untrusted device or suspicious activity detected." });
+        }
+
+        bool sent = await notificationService.SendNotificationAsync(userId,  "Test notification", message, context, isCritical: false);
+
+        return sent
+            ? Ok(new { message = "Test notification sent successfully." })
+            : StatusCode(429, new { message = "Rate limit exceeded. Please wait before sending another notification." });
+    }
+    
+    private string GetUserId()
+    {
+        return User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException("User not authenticated.");
+    }
+    
+    private async Task<bool> ValidateUserRequest(HttpContext context, string userId)
+    {
+        string? userIp = context.Items["UserIP"] as string;
+        string? userAgent = context.Items["UserAgent"] as string;
+
+        if (string.IsNullOrWhiteSpace(userIp) || string.IsNullOrWhiteSpace(userAgent))
+        {
+            return false;
+        }
+
+        bool isTrusted = await dbContext.TrustedDevices
+            .AnyAsync(d => d.UserId == Convert.ToInt32(userId) && d.IpAddress == userIp && d.UserAgent == userAgent);
+
+        return isTrusted;
     }
 }
