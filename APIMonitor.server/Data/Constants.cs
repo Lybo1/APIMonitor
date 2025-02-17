@@ -7,6 +7,8 @@ namespace APIMonitor.server.Data
         public const int RefreshTokenLength = 500;
         public const int RememberMeAccessTokenExpirationMinutes = 43200;
         
+        public const int UserAgentLength = 100;
+        
         public const int LongitudeLength = 50;
         public const int LatitudeLength = 50;
         public const int DescriptionLength = 100;
