@@ -9,9 +9,11 @@ using APIMonitor.server.Identity.Services.TokenServices;
 using APIMonitor.server.Middleware;
 using APIMonitor.server.Services.AuditLogService;
 using APIMonitor.server.Services.GeoLocationService;
+using APIMonitor.server.Services.IpBlockService;
 using APIMonitor.server.Services.MacAddressService;
 using APIMonitor.server.Services.NotificationsService;
 using APIMonitor.server.Services.RateLimitService;
+using APIMonitor.server.Services.ThreatDetectionService;
 using AspNetCoreRateLimit;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
@@ -84,12 +86,15 @@ builder.Services.AddHttpClient<IGeoLocationService, ApiGeoLocationService>();
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
-builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IGeoLocationService, ApiGeoLocationService>();
+builder.Services.AddScoped<IIpBlockService, IpBlockService>();
+builder.Services.AddScoped<IMacAddressService, MacAddressService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IRateLimitService, RateLimitService>();
-builder.Services.AddScoped<IMacAddressService, MacAddressService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<RoleManager<IdentityRole<int>>>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IThreatDetectionService, ThreatDetectionService>();
 
 builder.Services.AddSignalR();
 
@@ -167,8 +172,9 @@ else if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseMiddleware<RequestInfoMiddleware>();
 app.UseMiddleware<AuditLoggingMiddleware>();
+app.UseMiddleware<IpBanMiddleware>();
+app.UseMiddleware<RequestInfoMiddleware>();
 
 app.UseSerilogRequestLogging();
 app.UseIpRateLimiting();

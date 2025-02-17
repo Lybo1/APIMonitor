@@ -5,8 +5,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace APIMonitor.server.Services.ThreatDetectionService;
 
-public class ThreatDetectionService
+public class ThreatDetectionService : IThreatDetectionService
 {
+    private static readonly TimeSpan BanDuration = TimeSpan.FromHours(1);
+    
     private readonly ApplicationDbContext dbContext;
     private readonly IHttpContextAccessor httpContextAccessor;
 
@@ -32,9 +34,9 @@ public class ThreatDetectionService
             return false;
         }
 
-        bool isBlocked = await dbContext.IpBlocks.AnyAsync(ip => ip.Ip == ipAddress);
-        
-        return isBlocked;
+        IpBlock? ipBlock = await dbContext.IpBlocks.FirstOrDefaultAsync(ip => ip.Ip == ipAddress);
+
+        return ipBlock is not null && ipBlock.BlockedUntil > DateTime.UtcNow;
     }
 
     public async Task LogFailedAttemptAsync(string reason)
@@ -49,18 +51,39 @@ public class ThreatDetectionService
         string? ipAddress = GetIpAddress(context, AddressFamily.InterNetwork);
         string userAgent = GetUserAgent(context);
 
-        if (!string.IsNullOrEmpty(ipAddress))
+        if (string.IsNullOrEmpty(ipAddress))
         {
-            await dbContext.BotDetectionLogs.AddAsync(new BotDetectionLog
-            {
-                IpAddress = ipAddress,
-                UserAgent = userAgent,
-                Description = reason,
-                DetectedAt = DateTime.UtcNow,
-            });
-            
-            await dbContext.SaveChangesAsync();
+            return;
         }
+        
+        IpBlock? ipBlock = await dbContext.IpBlocks.FirstOrDefaultAsync(ip => ip.Ip == ipAddress);
+
+        if (ipBlock is null)
+        {
+            ipBlock = new IpBlock
+            {
+                Ip = ipAddress,
+                FailedAttempts = 1,
+                BlockedUntil = DateTime.UtcNow,
+                Reason = reason,
+            };
+            
+            await dbContext.IpBlocks.AddAsync(ipBlock);
+        }
+        else
+        {
+            ipBlock.FailedAttempts++;
+
+            if (ipBlock.FailedAttempts >= Constants.MaxLoginAttempts)
+            {
+                ipBlock.BlockedUntil = DateTime.UtcNow.Add(BanDuration);
+                ipBlock.Reason = $"Exceeded {Constants.MaxLoginAttempts} failed attempts. Banned until {ipBlock.BlockedUntil}.";    
+            }
+            
+            dbContext.IpBlocks.Update(ipBlock);
+        }
+        
+        await dbContext.SaveChangesAsync();
     }
 
     private static string? GetIpAddress(HttpContext context, AddressFamily addressFamily)

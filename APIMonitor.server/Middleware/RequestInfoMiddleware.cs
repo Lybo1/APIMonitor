@@ -9,7 +9,7 @@ public class RequestInfoMiddleware
         this.next = next ?? throw new ArgumentNullException(nameof(next));
     }
 
-    public async Task InvokeAsync(HttpContext context)
+    public async Task Invoke(HttpContext context)
     {
         string? userIp = context.Connection.RemoteIpAddress?.ToString();
         string? userAgent = context.Request.Headers["User-Agent"].ToString();
