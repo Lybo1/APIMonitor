@@ -16,6 +16,7 @@
           "FluentEmail.Core": "3.0.2",
           "FluentEmail.Smtp": "3.0.2",
           "FluentValidation.AspNetCore": "11.3.0",
+          "IPinfo": "3.0.1",
           "MailKit": "4.10.0",
           "Microsoft.ApplicationInsights.AspNetCore": "2.22.0",
           "Microsoft.AspNetCore.Authentication": "2.3.0",
@@ -232,6 +233,18 @@
           "lib/net6.0/Humanizer.dll": {
             "assemblyVersion": "2.14.0.0",
             "fileVersion": "2.14.1.48190"
+          }
+        }
+      },
+      "IPinfo/3.0.1": {
+        "dependencies": {
+          "System.Runtime.Caching": "8.0.0",
+          "System.Text.Json": "9.0.1"
+        },
+        "runtime": {
+          "lib/netstandard2.0/IPinfo.dll": {
+            "assemblyVersion": "3.0.1.0",
+            "fileVersion": "3.0.1.0"
           }
         }
       },
@@ -2223,6 +2236,13 @@
       "sha512": "sha512-lQKvtaTDOXnoVJ20ibTuSIOf2i0uO0MPbDhd1jm238I+U/2ZnRENj0cktKZhtchBMtCUSRQ5v4xBCUbKNmyVMw==",
       "path": "humanizer.core/2.14.1",
       "hashPath": "humanizer.core.2.14.1.nupkg.sha512"
+    },
+    "IPinfo/3.0.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-Un2AWnCByh5CXrZ2x6GJAnm9agVfdgyrxui0dRmknvah6wjBC78lKc5+HwhrvA4Bz4/xhoFgAEtG800cisuxig==",
+      "path": "ipinfo/3.0.1",
+      "hashPath": "ipinfo.3.0.1.nupkg.sha512"
     },
     "MailKit/4.10.0": {
       "type": "package",

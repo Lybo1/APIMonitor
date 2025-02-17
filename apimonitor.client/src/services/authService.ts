@@ -1,7 +1,17 @@
 import axiosInstance from './axiosInstance';
 
 class AuthService {
-    async register(email: string, password: string, rememberMe: boolean) {
+    async register(email: string, password: string, confirmPassword: string, rememberMe: boolean) {
+        if (password !== confirmPassword) {
+            throw new Error('Passwords do not match.');
+        }
+
+        const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^\w\d\s:]).{6,}$/;
+
+        if (!passwordRegex.test(password)) {
+            throw new Error("Password does not meet the required criteria.");
+        }
+
         const response = await axiosInstance.post('/register/register', {
             email,
             password,
@@ -15,10 +25,9 @@ class AuthService {
         return response.data;
     }
 
-    // Store access and refresh tokens
     private storeTokens(accessToken: string, refreshToken: string, rememberMe: boolean) {
         if (rememberMe) {
-            document.cookie = `refreshToken=${refreshToken}; path=/; secure; HttpOnly; SameSite=Strict`;
+            document.cookie = `refreshToken=${refreshToken}; path=/; secure; HttpOnly; SameSite=None; max-age=2592000`;
         } else {
             localStorage.setItem('accessToken', accessToken);
         }
@@ -30,8 +39,10 @@ class AuthService {
 
     private getRefreshToken() {
         const cookies = document.cookie.split(';');
+
         for (let cookie of cookies) {
             cookie = cookie.trim();
+
             if (cookie.startsWith('refreshToken=')) {
                 return cookie.substring('refreshToken='.length, cookie.length);
             }
@@ -54,9 +65,11 @@ class AuthService {
                     headers: { Authorization: `Bearer ${refreshToken}` },
                 });
                 this.storeTokens(response.data.accessToken, response.data.refreshToken, true);
+
                 return response.data.accessToken;
             } catch {
                 this.logout();
+
                 throw new Error('Session expired, please log in again.');
             }
         }

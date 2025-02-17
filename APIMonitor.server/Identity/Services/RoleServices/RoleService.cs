@@ -6,9 +6,9 @@ namespace APIMonitor.server.Identity.Services.RoleServices;
 public class RoleService : IRoleService
 {
     private readonly UserManager<User> userManager;
-    private readonly RoleManager<IdentityRole> roleManager;
+    private readonly RoleManager<IdentityRole<int>> roleManager;
 
-    public RoleService(UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
+    public RoleService(UserManager<User> userManager, RoleManager<IdentityRole<int>> roleManager)
     {
         this.userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         this.roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
@@ -20,14 +20,14 @@ public class RoleService : IRoleService
         
         roleName = roleName.Trim().ToUpperInvariant();
         
-        IdentityRole? role = await roleManager.FindByNameAsync(roleName);
+        IdentityRole<int>? role = await roleManager.FindByNameAsync(roleName);
         
         if (role != null)
         {
             return IdentityResult.Failed(new IdentityError { Description = $"Role {roleName} already exists." });
         }
         
-        IdentityRole newRole = new(roleName);
+        IdentityRole<int> newRole = new(roleName);
         IdentityResult result = await roleManager.CreateAsync(newRole);
         
         string errors = string.Join(',', result.Errors.Select(e => e.Description));
@@ -41,7 +41,7 @@ public class RoleService : IRoleService
         
         roleName = roleName.Trim().ToUpperInvariant();
         
-        IdentityRole? role = await roleManager.FindByNameAsync(roleName);
+        IdentityRole<int>? role = await roleManager.FindByNameAsync(roleName);
 
         if (role == null)
         {
@@ -63,7 +63,7 @@ public class RoleService : IRoleService
 
     }
 
-    public async Task<List<IdentityRole>> GetAllRolesAsync()
+    public async Task<List<IdentityRole<int>>> GetAllRolesAsync()
     {
         return await roleManager.Roles.ToListAsync();
     }

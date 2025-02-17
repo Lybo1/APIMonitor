@@ -2,7 +2,6 @@ using System.Security.Claims;
 using APIMonitor.server.Data;
 using APIMonitor.server.Models;
 using APIMonitor.server.Services.NotificationsService;
-using APIMonitor.server.Services.SecurityService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

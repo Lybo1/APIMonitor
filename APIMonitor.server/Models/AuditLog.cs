@@ -18,7 +18,7 @@ public class AuditLog
     public string Ipv4Address { get; set; } = null!;
     
     [Required]
-    [StringLength(Constants.Ipv6AddressLength, ErrorMessage = "Ipv6 cannot exceed 15 characters.")]
+    [StringLength(Constants.Ipv6AddressLength, ErrorMessage = "Ipv6 cannot exceed 39 characters.")]
     public string Ipv6Address { get; set; } = null!;
     
     [Required]
@@ -26,16 +26,27 @@ public class AuditLog
     public string MacAddress { get; set; } = null!;
     
     [Required]
+    [StringLength(500, ErrorMessage = "User-Agent cannot exceed 500 characters.")]
+    public string UserAgent { get; set; } = "Unknown";
+    
+    [Required]
     [StringLength(Constants.DescriptionLength, ErrorMessage = "Action cannot exceed 100 characters.")]
     public string Action { get; set; } = null!;
+    
+    [Required]
+    [StringLength(Constants.DetailsLength, ErrorMessage = "Details cannot exceed 1000 characters.")]
+    public string Details { get; set; } = null!;
+    
+    [Required]
+    public long ResponseTimeMs { get; set; } 
     
     [Required]
     [DataType(DataType.DateTime)]
     public DateTime Date { get; set; } = DateTime.UtcNow;
     
     [Required]
-    [StringLength(Constants.DetailsLength, ErrorMessage = "Details cannot exceed 1000 characters.")]
-    public string Details { get; set; } = null!;
+    [DataType(DataType.DateTime)]
+    public DateTime RequestTimestamp { get; set; } = DateTime.UtcNow;
     
     public virtual User User { get; set; } = null!;
 }

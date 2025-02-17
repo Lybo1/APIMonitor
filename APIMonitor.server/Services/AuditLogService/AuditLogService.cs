@@ -1,23 +1,31 @@
+using System.Net.Sockets;
 using APIMonitor.server.Data;
 using APIMonitor.server.Models;
+using APIMonitor.server.Services.GeoLocationService;
 using APIMonitor.server.Services.MacAddressService;
+using Microsoft.EntityFrameworkCore;
 
 namespace APIMonitor.server.Services.AuditLogService;
 
-public class AuditLogService
+public class AuditLogService : IAuditLogService
 {
     private readonly ApplicationDbContext dbContext;
     private readonly IMacAddressService macAddressService;
+    private readonly IGeoLocationService geoLocationService;
     private readonly IHttpContextAccessor httpContextAccessor;
 
-    public AuditLogService(ApplicationDbContext dbContext, IMacAddressService macAddressService, IHttpContextAccessor httpContextAccessor)
+    public AuditLogService(ApplicationDbContext dbContext, 
+                           IMacAddressService macAddressService, 
+                           IHttpContextAccessor httpContextAccessor, 
+                           IGeoLocationService geoLocationService)
     {
-        this.dbContext = dbContext;
-        this.macAddressService = macAddressService;
-        this.httpContextAccessor = httpContextAccessor;
+        this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        this.macAddressService = macAddressService ?? throw new ArgumentNullException(nameof(macAddressService));
+        this.httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+        this.geoLocationService = geoLocationService ?? throw new ArgumentNullException(nameof(geoLocationService));
     }
 
-    public async Task LogActionAsync(int userId, string action, string details)
+    public async Task LogActionAsync(int userId, string action, string details, DateTime requestStartTime)
     {
         ArgumentNullException.ThrowIfNull(action, nameof(action));
         ArgumentNullException.ThrowIfNull(details, nameof(details));
@@ -30,19 +38,84 @@ public class AuditLogService
         }
         
         string? macAddress = await macAddressService.GetMacAddressAsync(context);
-        string ipAddress = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        string ipv4Address = GetIpAddress(context, AddressFamily.InterNetwork) ?? "unknown";
+        string ipv6Address = GetIpAddress(context, AddressFamily.InterNetworkV6) ?? "unknown";
+        string userAgent = GetUserAgent(context);
+        
+        IpGeolocation location = await geoLocationService.GetLocationAsync(ipv4Address);
+        
+        long responseTimeMs = (long)(DateTime.UtcNow - requestStartTime).TotalMilliseconds;
 
         AuditLog log = new()
         {
             UserId = userId,
-            Ipv4Address = ipAddress,
+            Ipv4Address = ipv4Address,
+            Ipv6Address = ipv6Address,
             MacAddress = macAddress ?? "unknown",
+            UserAgent = userAgent,
             Action = action,
-            Details = details,
+            Details = $"{details} | Location: {location.City}, {location.Country} | Latitude: {location.Latitude}, Longitude: {location.Longitude}",
+            RequestTimestamp = requestStartTime,
+            ResponseTimeMs = responseTimeMs,
             Date = DateTime.UtcNow
         };
         
         await dbContext.AuditLogs.AddAsync(log);
         await dbContext.SaveChangesAsync();
+    }
+
+    public async Task<List<AuditLog>> GetUserAuditLogsAsync(int userId)
+    {
+        return await dbContext.AuditLogs
+            .Where(log => log.UserId == userId)
+            .OrderByDescending(log => log.Date)
+            .ToListAsync();
+    }
+
+    public async Task<AuditLog?> GetAuditLogByIdAsync(int id, int? userId = null)
+    {
+        return userId is null
+            ? await dbContext.AuditLogs.FindAsync(id)
+            : await dbContext.AuditLogs.FirstOrDefaultAsync(log => log.Id == id && log.UserId == userId);
+    }
+
+    public async Task<List<AuditLog>> GetAllAuditLogsAsync()
+    {
+        return await dbContext.AuditLogs.OrderByDescending(log => log.Date).ToListAsync();
+    }
+
+    public async Task<bool> DeleteAuditLogAsync(int id)
+    {
+        AuditLog? log = await dbContext.AuditLogs.FindAsync(id);
+
+        if (log is null)
+        {
+            return false;
+        }
+        
+        dbContext.AuditLogs.Remove(log);
+        
+        await dbContext.SaveChangesAsync();
+        
+        return true;
+    }
+
+    public async Task<bool> PurgeAuditLogsAsync()
+    {
+        await dbContext.Database.ExecuteSqlRawAsync("DELETE FROM AuditLogs");
+        
+        return true;
+    }
+
+    private static string? GetIpAddress(HttpContext context, AddressFamily family)
+    {
+        return context.Connection.RemoteIpAddress is { } ipAddress && ipAddress.AddressFamily == family 
+            ? ipAddress.ToString() 
+            : null;
+    }
+
+    private static string GetUserAgent(HttpContext context)
+    {
+        return context.Request.Headers["User-Agent"].FirstOrDefault() ?? "Unknown";
     }
 }

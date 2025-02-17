@@ -1,73 +1,64 @@
-import { createContext, ReactNode, useEffect, useState } from "react";
-import themesData from "../config/themes.json";
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { motion, AnimatePresence } from "framer-motion";
+import themes from '../config/themes.json';
 
 type Theme = {
-    id: string;
     name: string;
+    id: string;
     background: string;
     text: string;
     primary: string;
 };
 
 type ThemeContextType = {
-    currentTheme: string;
-    availableThemes: Theme[];
-    primaryColor: string;
-    font: string;
-    setTheme: (theme: string) => void;
-    setPrimaryColor: (color: string) => void;
-    setFont: (font: string) => void;
+    theme: Theme;
+    setTheme: (themeId: string) => void;
 };
 
-// Create Context
-export const ThemeContext = createContext<ThemeContextType>({
-    currentTheme: "light",
-    availableThemes: themesData.themes,
-    primaryColor: themesData.colors[0],
-    font: themesData.fonts[0],
-    setTheme: () => {},
-    setPrimaryColor: () => {},
-    setFont: () => {},
-});
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-// Provider Component
-export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-    const [currentTheme, setCurrentTheme] = useState("light");
-    const [primaryColor, setPrimaryColor] = useState(themesData.colors[0]);
-    const [font, setFont] = useState(themesData.fonts[0]);
+export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
+    const [theme, setTheme] = useState<Theme>(themes.themes[0]);
+
+    const switchTheme = (themeId: string) => {
+        const selectedTheme = themes.themes.find((t: Theme) => t.id === themeId); // Fixed 'thems' typo
+
+        if (selectedTheme) {
+            setTheme(selectedTheme);
+        }
+    };
 
     useEffect(() => {
-        const savedTheme = localStorage.getItem("theme") || "light";
-        const savedColor = localStorage.getItem("primaryColor") || themesData.colors[0];
-        const savedFont = localStorage.getItem("font") || themesData.fonts[0];
+        const storedTheme = localStorage.getItem("theme");
 
-        setCurrentTheme(savedTheme);
-        setPrimaryColor(savedColor);
-        setFont(savedFont);
+        if (storedTheme) {
+            switchTheme(storedTheme);
+        }
     }, []);
 
-    const changeTheme = (theme: string) => {
-        setCurrentTheme(theme);
-        localStorage.setItem("theme", theme);
-    };
-
-    const changeColor = (color: string) => {
-        setPrimaryColor(color);
-        localStorage.setItem("primaryColor", color);
-    };
-
-    const changeFont = (font: string) => {
-        setFont(font);
-        localStorage.setItem("font", font);
-    };
-
-    const selectedTheme = themesData.themes.find(t => t.id === currentTheme) || themesData.themes[0];
-
     return (
-        <ThemeContext.Provider value={{ currentTheme, availableThemes: themesData.themes, primaryColor, font, setTheme: changeTheme, setPrimaryColor: changeColor, setFont: changeFont }}>
-            <div className={`${selectedTheme.background} ${selectedTheme.text} font-${font}`} style={{ "--primary-color": primaryColor } as React.CSSProperties}>
-                {children}
-            </div>
+        <ThemeContext.Provider value={{ theme, setTheme: switchTheme }}>
+            <AnimatePresence initial={false}>
+                <motion.div
+                    key={theme.id}
+                    className={`${theme.background} ${theme.text} transition-all duration-300`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                >
+                    {children}
+                </motion.div>
+            </AnimatePresence>
         </ThemeContext.Provider>
     );
+};
+
+export const useTheme = () => {
+    const context = useContext(ThemeContext);
+
+    if (!context) {
+        throw new Error('useTheme must be used within ThemeProvider');
+    }
+
+    return context;
 };

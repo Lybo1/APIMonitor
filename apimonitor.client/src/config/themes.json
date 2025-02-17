@@ -1,34 +1,77 @@
 {
-  "colors": ["blue", "red", "green", "purple", "orange", "pink", "cyan", "yellow"],
-  "fonts": ["sans", "serif", "mono", "poppins", "roboto"],
+  "colors": {
+    "blue": "#3B82F6",
+    "red": "#EF4444",
+    "green": "#10B981",
+    "purple": "#8B5CF6",
+    "orange": "#FB923C",
+    "pink": "#EC4899",
+    "cyan": "#06B6D4",
+    "yellow": "#F59E0B"
+  },
+  "fonts": {
+    "sans": "Arial, Helvetica, sans-serif",
+    "serif": "Georgia, serif",
+    "mono": "Courier New, monospace",
+    "poppins": "'Poppins', sans-serif",
+    "roboto": "'Roboto', sans-serif"
+  },
   "themes": [
     {
-      "name": "Light",
       "id": "light",
+      "name": "Light",
       "background": "bg-white",
       "text": "text-gray-900",
-      "primary": "text-blue-500"
+      "primary": "text-blue-500",
+      "font": "sans",
+      "customColors": {
+        "primary": "#3B82F6",
+        "secondary": "#F59E0B",
+        "background": "#FFFFFF",
+        "text": "#1F2937"
+      }
     },
     {
-      "name": "Dark",
       "id": "dark",
+      "name": "Dark",
       "background": "bg-gray-900",
       "text": "text-white",
-      "primary": "text-blue-400"
+      "primary": "text-blue-400",
+      "font": "serif",
+      "customColors": {
+        "primary": "#3B82F6",
+        "secondary": "#F59E0B",
+        "background": "#1F2937",
+        "text": "#E5E7EB"
+      }
     },
     {
-      "name": "Cyberpunk",
       "id": "cyberpunk",
+      "name": "Cyberpunk",
       "background": "bg-black",
       "text": "text-green-400",
-      "primary": "text-pink-500"
+      "primary": "text-pink-500",
+      "font": "mono",
+      "customColors": {
+        "primary": "#EC4899",
+        "secondary": "#F59E0B",
+        "background": "#000000",
+        "text": "#00FF00"
+      }
     },
     {
-      "name": "Minimalist",
       "id": "minimalist",
+      "name": "Minimalist",
       "background": "bg-gray-100",
       "text": "text-gray-800",
-      "primary": "text-teal-600"
+      "primary": "text-teal-600",
+      "font": "poppins",
+      "customColors": {
+        "primary": "#10B981",
+        "secondary": "#F59E0B",
+        "background": "#F9FAFB",
+        "text": "#374151"
+      }
     }
   ]
 }

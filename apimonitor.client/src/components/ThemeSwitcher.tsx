@@ -1,91 +1,35 @@
-import { useContext, useState } from "react";
-import { ThemeContext } from "../context/ThemeContext.tsx";
-import themesData from "../config/themes.json";
-import { ChromePicker } from "react-color";
-import { motion, AnimatePresence } from "framer-motion";
+import { useTheme } from '../context/ThemeContext.tsx';
 
 const ThemeSwitcher = () => {
-    const { currentTheme, primaryColor, font, setTheme, setPrimaryColor, setFont, availableThemes } = useContext(ThemeContext);
-    const [showColorPicker, setShowColorPicker] = useState(false);
+    const { theme, setTheme } = useTheme();
 
     return (
-        <motion.div
-            className="p-6 flex flex-col gap-5 items-start bg-opacity-90 backdrop-blur-md shadow-lg rounded-lg border border-gray-300 dark:border-gray-600 transition-all"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-        >
-            <motion.label className="flex flex-col w-full text-gray-800 dark:text-gray-200"
-                          whileHover={{ scale: 1.05 }}
-                          transition={{ duration: 0.2 }}
+        <div className="flex items-center justify-center gap-4">
+            <button
+                onClick={() => setTheme('light')}
+                className={`px-4 py-2 rounded-lg ${theme.id === 'light' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
             >
-                <span className="mb-1 text-lg font-semibold">Theme</span>
-                <select
-                    value={currentTheme}
-                    onChange={(e) => setTheme(e.target.value)}
-                    className="border p-2 rounded-md dark:bg-gray-800 dark:text-white transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                    {availableThemes.map((theme) => (
-                        <option key={theme.id} value={theme.id}>
-                            {theme.name}
-                        </option>
-                    ))}
-                </select>
-            </motion.label>
-
-            <motion.label className="flex flex-col w-full text-gray-800 dark:text-gray-200"
-                          whileHover={{ scale: 1.05 }}
-                          transition={{ duration: 0.2 }}
+                Light
+            </button>
+            <button
+                onClick={() => setTheme('dark')}
+                className={`px-4 py-2 rounded-lg ${theme.id === 'dark' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
             >
-                <span className="mb-1 text-lg font-semibold">Primary Color</span>
-                <motion.div className="relative">
-                    <motion.button
-                        className="border p-2 rounded-md shadow-md transition-all"
-                        style={{ backgroundColor: primaryColor }}
-                        onClick={() => setShowColorPicker(!showColorPicker)}
-                        whileTap={{ scale: 0.95 }}
-                        whileHover={{ scale: 1.1 }}
-                    >
-                        Pick Color
-                    </motion.button>
-
-                    <AnimatePresence>
-                        {showColorPicker && (
-                            <motion.div
-                                className="absolute mt-2 z-10"
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.9 }}
-                                transition={{ duration: 0.3 }}
-                            >
-                                <ChromePicker
-                                    color={primaryColor}
-                                    onChange={(color: { hex: string }) => setPrimaryColor(color.hex)}
-                                />
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </motion.div>
-            </motion.label>
-
-            <motion.label className="flex flex-col w-full text-gray-800 dark:text-gray-200"
-                          whileHover={{ scale: 1.05 }}
-                          transition={{ duration: 0.2 }}
+                Dark
+            </button>
+            <button
+                onClick={() => setTheme('cyberpunk')}
+                className={`px-4 py-2 rounded-lg ${theme.id === 'cyberpunk' ? 'bg-pink-500 text-white' : 'bg-gray-200'}`}
             >
-                <span className="mb-1 text-lg font-semibold">Font</span>
-                <select
-                    value={font}
-                    onChange={(e) => setFont(e.target.value)}
-                    className="border p-2 rounded-md dark:bg-gray-800 dark:text-white transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                    {themesData.fonts.map((font) => (
-                        <option key={font} value={font}>
-                            {font.charAt(0).toUpperCase() + font.slice(1)}
-                        </option>
-                    ))}
-                </select>
-            </motion.label>
-        </motion.div>
+                Cyberpunk
+            </button>
+            <button
+                onClick={() => setTheme('minimalist')}
+                className={`px-4 py-2 rounded-lg ${theme.id === 'minimalist' ? 'bg-teal-600 text-white' : 'bg-gray-200'}`}
+            >
+                Minimalist
+            </button>
+        </div>
     );
 };
 

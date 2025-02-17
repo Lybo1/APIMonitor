@@ -4,7 +4,6 @@ using System.Security.Cryptography;
 using System.Text;
 using APIMonitor.server.Data;
 using APIMonitor.server.Models;
-using APIMonitor.server.Services.SecurityService;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -19,20 +18,16 @@ public class TokenService : ITokenService
     private readonly IHttpContextAccessor httpContextAccessor;
     private readonly IMemoryCache memoryCache;
     private readonly JwtSecurityTokenHandler handler;
-    private readonly ISecurityEventService securityEventService;
 
     public TokenService(UserManager<User> userManager, 
                         IConfiguration configuration, 
                         IHttpContextAccessor httpContextAccessor, 
-                        IMemoryCache memoryCache, 
-                        ISecurityEventService securityEventService
-    )
+                        IMemoryCache memoryCache)
     {
         this.userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         this.httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         this.memoryCache = memoryCache ?? throw new ArgumentNullException(nameof(memoryCache));
-        this.securityEventService = securityEventService ?? throw new ArgumentNullException(nameof(securityEventService));
         this.handler = new JwtSecurityTokenHandler();
     }
     
@@ -118,7 +113,6 @@ public class TokenService : ITokenService
             if (storedIp != ipAddress || storedUserAgent != userAgent)
             {
                 await RevokeRefreshTokenAsync(user);
-                securityEventService.TriggerSuspiciousLogin(user.Id.ToString(), ipAddress, userAgent);
 
                 throw new SecurityTokenException("Suspicious login detected. Please re-authenticate.");
             }

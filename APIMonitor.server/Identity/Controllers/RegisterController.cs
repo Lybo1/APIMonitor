@@ -58,7 +58,7 @@ public class RegisterController : ControllerBase
 
         if (!isInRole)
         {
-            IdentityRole? existingRole = await roleService.GetAllRolesAsync()
+            IdentityRole<int>? existingRole = await roleService.GetAllRolesAsync()
                                                           .ContinueWith(t => t.Result.FirstOrDefault(r => r.Name == defaultRole));
 
             if (existingRole is null)
