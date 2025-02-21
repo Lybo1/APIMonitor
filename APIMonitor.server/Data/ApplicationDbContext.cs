@@ -18,6 +18,7 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<int>, i
     public DbSet<ApiMetrics> ApiMetrics { get; set; }
     public DbSet<ApiRequestLog> ApiRequestLogs { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
+    public DbSet<BannedIp> BannedIps { get; set; }
     public DbSet<BotDetectionLog> BotDetectionLogs { get; set; }
     public DbSet<DashboardWidget> DashboardWidgets { get; set; }
     public DbSet<EventLog> EventLogs { get; set; }
@@ -26,6 +27,7 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<int>, i
     public DbSet<NotificationPreference> NotificationPreferences { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<RateLimitRule> RateLimitRules { get; set; }
+    public DbSet<RateLimitViolation> RateLimitViolations { get; set; }
     public DbSet<RequestStatistics> RequestStatistics { get; set; }
     public DbSet<ThreatAlert> ThreatAlerts { get; set; }
     public DbSet<TokenResponse> TokenResponses { get; set; }

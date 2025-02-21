@@ -11,8 +11,8 @@ namespace APIMonitor.server.Data
         
         public const int LongitudeLength = 50;
         public const int LatitudeLength = 50;
-        public const int DescriptionLength = 100;
         public const int CountryLength = 100;
+        public const int DescriptionLength = 200;
         public const int TitleLength = 200;
         public const int DetailsLength = 1000;
         

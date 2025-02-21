@@ -44,6 +44,13 @@ public class RateLimitService : IRateLimitService
                 
                 memoryCache.Set(cacheKey, requestCount, penaltyTime);
                 
+                await LogViolationAsync(userId, userIp, action, penaltyTime);
+
+                if (penalty >= Constants.MaxLoginAttempts)
+                {
+                    await AutoBanIpAsync(userIp);
+                }
+                
                 return true;
             }
         }
@@ -51,5 +58,40 @@ public class RateLimitService : IRateLimitService
         memoryCache.Set(cacheKey, requestCount + 1, rule.TimeWindow);
         
         return false;
+    }
+
+    private async Task LogViolationAsync(string userId, string userIp, string action, TimeSpan penaltyTime)
+    {
+        RateLimitViolation log = new()
+        {
+            UserId = userId,
+            IpAddress = userIp,
+            Action = action,
+            Timestamp = DateTime.UtcNow,
+            PenaltyDuration = penaltyTime
+        };
+        
+        await dbContext.RateLimitViolations.AddAsync(log);
+        await dbContext.SaveChangesAsync();
+    }
+
+    private async Task AutoBanIpAsync(string ipAddress)
+    {
+        bool isBanned = await dbContext.BannedIps.AnyAsync(ip => ip.IpAddress == ipAddress);
+        
+        if (isBanned)
+        {
+            return;
+        }
+        
+        BannedIp ban = new()
+        {
+            IpAddress = ipAddress,
+            BannedUntil = DateTime.UtcNow.AddHours(6),
+            Reason = "Excessive rate-limit violations"
+        };
+        
+        await dbContext.BannedIps.AddAsync(ban);
+        await dbContext.SaveChangesAsync();
     }
 }

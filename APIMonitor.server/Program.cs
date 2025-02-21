@@ -8,6 +8,7 @@ using APIMonitor.server.Identity.Services.RoleServices;
 using APIMonitor.server.Identity.Services.TokenServices;
 using APIMonitor.server.Middleware;
 using APIMonitor.server.Services.AuditLogService;
+using APIMonitor.server.Services.BannedIpService;
 using APIMonitor.server.Services.GeoLocationService;
 using APIMonitor.server.Services.IpBlockService;
 using APIMonitor.server.Services.MacAddressService;
@@ -81,7 +82,6 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddDataProtection();
-
 builder.Services.AddHttpClient<IGeoLocationService, ApiGeoLocationService>();
 builder.Services.AddHttpContextAccessor();
 
@@ -196,6 +196,24 @@ app.Use(async (context, next) =>
         await next();
     }
 });
+
+// app.Use(async (context, next) =>
+// {
+//     string userIp = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+//
+//     IBannedIpService? bannedIpService = context.RequestServices.GetService<IBannedIpService>();
+//
+//     if (bannedIpService is not null && await bannedIpService.IsIpBannedAsync(userIp))
+//     {
+//         context.Response.StatusCode = StatusCodes.Status403Forbidden;
+//         
+//         await context.Response.WriteAsync("Your IP is temporarily banned due to repeated violations.");
+//         
+//         return;
+//     }
+//
+//     await next();
+// });
 
 if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
 {

@@ -6,5 +6,6 @@ public enum AlertType
     RateLimitExceeded,
     ErrorSpike,
     UnauthorizedAccess,
-    SuspiciousActivity
+    SuspiciousActivity,
+    IpBanned,
 }
