@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("APIMonitor.server")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cf32ec1f03a08f4f243cbef1d9d8d46ecc7c5e32")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+eb5bab4d489c3da52d59b8870a042be46d077d32")]
 [assembly: System.Reflection.AssemblyProductAttribute("APIMonitor.server")]
 [assembly: System.Reflection.AssemblyTitleAttribute("APIMonitor.server")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

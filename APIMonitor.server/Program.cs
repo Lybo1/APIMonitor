@@ -7,8 +7,8 @@ using APIMonitor.server.Identity.Seeding;
 using APIMonitor.server.Identity.Services.RoleServices;
 using APIMonitor.server.Identity.Services.TokenServices;
 using APIMonitor.server.Middleware;
+using APIMonitor.server.Services.ApiScannerService;
 using APIMonitor.server.Services.AuditLogService;
-using APIMonitor.server.Services.BannedIpService;
 using APIMonitor.server.Services.GeoLocationService;
 using APIMonitor.server.Services.IpBlockService;
 using APIMonitor.server.Services.MacAddressService;
@@ -19,10 +19,18 @@ using AspNetCoreRateLimit;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Identity.Web;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.OpenApi.Models;
+using Polly;
 using Serilog;
 using Serilog.Events;
+using Microsoft.Extensions.Http.Resilience;
+using Microsoft.Extensions.Http;
+using Microsoft.Extensions.Http;
+using Microsoft.Extensions.Http.Resilience;
+using Polly.Extensions.Http;
+using Polly.Retry;
+
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -76,10 +84,17 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+        IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
     };
 });
+
+// builder.Services.AddHttpClient<IApiScannerService, ApiScannerService>()
+// .AddResilienceHandler(options =>
+// {
+//     options.Retry.MaxRetryAttempts = 3;  
+//     options.Retry.BackoffType = DelayBackoffType.Exponential; 
+//     options.Timeout.Timeout = TimeSpan.FromSeconds(5);
+// });
 
 builder.Services.AddDataProtection();
 builder.Services.AddHttpClient<IGeoLocationService, ApiGeoLocationService>();
@@ -101,7 +116,18 @@ builder.Services.AddSignalR();
 builder.Services.AddMemoryCache();
 builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
 builder.Services.AddInMemoryRateLimiting();
+builder.Services.AddSingleton<IMemoryCache, MemoryCache>();
 builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+
+builder.Services.AddHostedService<ApiScannerBackgroundService>();
+
+builder.Services.AddHttpClient<IApiScannerService, ApiScannerService>()
+    .AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(5)))
+    .AddPolicyHandler(Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
+        .RetryAsync(3))
+    .AddPolicyHandler(Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
+        .CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
+
 
 builder.Services.AddCors(options =>
 {

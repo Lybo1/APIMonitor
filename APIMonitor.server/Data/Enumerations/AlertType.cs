@@ -8,4 +8,6 @@ public enum AlertType
     UnauthorizedAccess,
     SuspiciousActivity,
     IpBanned,
+    IpUnbanned,
+    Cleanup
 }

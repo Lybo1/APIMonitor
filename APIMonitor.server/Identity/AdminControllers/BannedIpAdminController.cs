@@ -19,70 +19,64 @@ public class BannedIpAdminController : ControllerBase
 {
     private readonly IBannedIpService bannedIpService;
     private readonly IThreatDetectionService threatDetectionService;
-    private readonly IMemoryCache memoryCache;
     
-    private const string CacheKey = "BannedIpsCache";
 
-    public BannedIpAdminController(IMemoryCache memoryCache, IThreatDetectionService threatDetectionService, IBannedIpService bannedIpService)
+    public BannedIpAdminController(IThreatDetectionService threatDetectionService, IBannedIpService bannedIpService)
     {
         this.bannedIpService = bannedIpService ?? throw new ArgumentNullException(nameof(bannedIpService));
         this.threatDetectionService = threatDetectionService ?? throw new ArgumentNullException(nameof(threatDetectionService));
-        this.memoryCache = memoryCache ?? throw new ArgumentNullException(nameof(memoryCache));
     }
 
     [HttpGet]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(404)]
     public async Task<IActionResult> GetBannedIps()
     {
-        if (memoryCache.TryGetValue(CacheKey, out List<IpBlock>? bannedIps))
-        {
-            return Ok(bannedIps);
-        }
-        
-        bannedIps = await bannedIpService.GetBannedIpsAsync();
-            
+        List<IpBlock> bannedIps = await bannedIpService.GetBannedIpsAsync();
+
         if (bannedIps.Count == 0)
         {
             return NotFound(new { message = "No currently banned IPs." });
         }
 
-        MemoryCacheEntryOptions cacheOptions = new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
-            
-        memoryCache.Set(CacheKey, bannedIps, cacheOptions);
-
         return Ok(bannedIps);
     }
 
     [HttpDelete("{ipAddress}")]
-    public async Task<IActionResult> UnbanIp([FromRoute, Required, StringLength(15)] string ipAddress) 
+    [ProducesResponseType(200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> UnbanIp([FromRoute, Required, StringLength(15)] string ipAddress)
     {
-        bool unbanned = await bannedIpService.UnbanIpAsync(ipAddress);
+        string adminName = User.Identity?.Name ?? "Unknown";
         
+        bool unbanned = await bannedIpService.UnbanIpAsync(ipAddress);
+
         if (!unbanned)
         {
             return NotFound(new { message = $"IP {ipAddress} not found or already unbanned." });
         }
 
-        memoryCache.Remove(CacheKey);
+        await threatDetectionService.LogThreatAsync(ipAddress, AlertType.IpUnbanned, "Admin removed ban", AlertSeverity.Low);
 
-        await threatDetectionService.LogThreatAsync(ipAddress, AlertType.IpBanned, $"Admin unbanned IP {ipAddress}", AlertSeverity.Low);
-
-        return Ok(new { message = $"IP {ipAddress} has been successfully unbanned." });
+        return Ok(new { message = $"IP {ipAddress} has been successfully unbanned by {adminName}." });
     }
 
     [HttpDelete("clear")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(404)]
     public async Task<IActionResult> ClearAllBans()
     {
-        bool cleared = await bannedIpService.ClearAllBannedIpsAsync();
+        string adminName = User.Identity?.Name ?? "Unknown";
         
+        bool cleared = await bannedIpService.ClearAllBannedIpsAsync();
+
         if (!cleared)
         {
             return NotFound(new { message = "No banned IPs to clear." });
         }
-        
-        memoryCache.Remove(CacheKey);
 
-        await threatDetectionService.LogThreatAsync("ALL", AlertType.IpBanned, "Admin cleared all IP bans.", AlertSeverity.Low);
-        
-        return Ok(new { message = "All banned IPs have been successfully cleared." });
+        await threatDetectionService.LogThreatAsync("ALL", AlertType.IpUnbanned, "Admin cleared all IP bans", AlertSeverity.Medium);
+
+        return Ok(new { message = $"All banned IPs have been successfully cleared by {adminName}." });
     }
 }

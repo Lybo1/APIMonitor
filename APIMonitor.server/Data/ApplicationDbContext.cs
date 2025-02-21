@@ -15,6 +15,7 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<int>, i
     }
     
     public DbSet<AlertRule> AlertRules { get; set; }
+    public DbSet<ApiEndpoint> ApiEndpoints { get; set; }
     public DbSet<ApiMetrics> ApiMetrics { get; set; }
     public DbSet<ApiRequestLog> ApiRequestLogs { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }

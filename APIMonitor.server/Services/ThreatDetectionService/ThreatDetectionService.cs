@@ -90,7 +90,7 @@ public class ThreatDetectionService : IThreatDetectionService
     {
         memoryCache.Set($"Blocked:{ipAddress}", true, BanDuration);
         
-        IpBlock ipBlock = new IpBlock
+        IpBlock ipBlock = new()
         {
             Ip = ipAddress,
             BlockedUntil = DateTime.UtcNow.Add(BanDuration),
@@ -106,11 +106,14 @@ public class ThreatDetectionService : IThreatDetectionService
 
     public async Task LogThreatAsync(string ip, AlertType alertType, string description, AlertSeverity severity)
     {
+        HttpContext? context = this.httpContextAccessor.HttpContext;
+        string? adminName = context?.User.Identity?.Name ?? "Unknown";
+        
         ThreatAlert alert = new()
         {
             IpAddress = ip,
             AlertType = alertType,
-            Description = description,
+            Description = $"{description} (by {adminName})",
             Severity = severity,
             IsResolved = false,
             TimeStamp = DateTime.UtcNow

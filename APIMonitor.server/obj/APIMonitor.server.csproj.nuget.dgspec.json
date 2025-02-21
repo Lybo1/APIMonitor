@@ -152,6 +152,22 @@
               "target": "Package",
               "version": "[9.0.1, )"
             },
+            "Microsoft.Extensions.Http": {
+              "target": "Package",
+              "version": "[9.0.2, )"
+            },
+            "Microsoft.Extensions.Http.Diagnostics": {
+              "target": "Package",
+              "version": "[9.2.0, )"
+            },
+            "Microsoft.Extensions.Http.Polly": {
+              "target": "Package",
+              "version": "[9.0.2, )"
+            },
+            "Microsoft.Extensions.Http.Resilience": {
+              "target": "Package",
+              "version": "[9.2.0, )"
+            },
             "Microsoft.Identity.Web": {
               "target": "Package",
               "version": "[3.0.0, )"
@@ -167,6 +183,18 @@
             "Polly": {
               "target": "Package",
               "version": "[8.5.2, )"
+            },
+            "Polly.Core": {
+              "target": "Package",
+              "version": "[8.5.2, )"
+            },
+            "Polly.Extensions": {
+              "target": "Package",
+              "version": "[8.5.2, )"
+            },
+            "Polly.Extensions.Http": {
+              "target": "Package",
+              "version": "[3.0.0, )"
             },
             "QRCoder": {
               "target": "Package",
