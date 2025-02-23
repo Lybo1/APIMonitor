@@ -2,18 +2,24 @@ namespace APIMonitor.server.Services.ApiScannerService;
 
 public class ApiScannerBackgroundService : BackgroundService
 {
-    private readonly IApiScannerService apiScannerService;
+    private readonly IServiceProvider serviceProvider;
 
-    public ApiScannerBackgroundService(IApiScannerService apiScannerService)
+    public ApiScannerBackgroundService(IServiceProvider serviceProvider)
     {
-        this.apiScannerService = apiScannerService ?? throw new ArgumentNullException(nameof(apiScannerService));
+        this.serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            await apiScannerService.ScanApisAsync();
+            using (var scope = serviceProvider.CreateScope())
+            {
+                IApiScannerService apiScannerService = scope.ServiceProvider.GetRequiredService<IApiScannerService>();
+
+                await apiScannerService.ScanApisAsync();
+            }
+
             await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
         }
     }

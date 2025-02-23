@@ -2,7 +2,10 @@ using System.Collections.Concurrent;
 using System.Net.Sockets;
 using APIMonitor.server.Data;
 using APIMonitor.server.Data.Enumerations;
+using APIMonitor.server.Hubs;
 using APIMonitor.server.Models;
+using APIMonitor.server.Services.ApiScannerService;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -17,12 +20,15 @@ public class ThreatDetectionService : IThreatDetectionService
     private readonly ApplicationDbContext dbContext;
     private readonly IHttpContextAccessor httpContextAccessor;
     private readonly IMemoryCache memoryCache;
+    private readonly IHubContext<NotificationHub> hubContext;
 
-    public ThreatDetectionService(ApplicationDbContext dbContext, IHttpContextAccessor httpContextAccessor, IMemoryCache memoryCache)
+
+    public ThreatDetectionService(ApplicationDbContext dbContext, IHttpContextAccessor httpContextAccessor, IMemoryCache memoryCache, IHubContext<NotificationHub> hub)
     {
         this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         this.httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         this.memoryCache = memoryCache ?? throw new ArgumentNullException(nameof(memoryCache));
+        this.hubContext = hub ?? throw new ArgumentNullException(nameof(hub));
         
         Task.Run(UnbanExpiredIpsAsync);
     }
@@ -100,6 +106,8 @@ public class ThreatDetectionService : IThreatDetectionService
         
         await dbContext.IpBlocks.AddAsync(ipBlock);
         await dbContext.SaveChangesAsync();
+        
+        await hubContext.Clients.All.SendAsync("ReceiveNotification", $"🚨 IP {ipAddress} has been banned!");
         
         await LogThreatAsync(ipAddress, AlertType.IpBanned, reason, AlertSeverity.High);
     }

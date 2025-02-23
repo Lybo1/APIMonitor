@@ -50,15 +50,21 @@ export class AuthService {
   }
 
   getUserRoles(): Observable<string[]> {
-    const token = this.getToken();
+    return new Observable((observer) => {
+      const token = this.getToken();
 
-    if (!token) {
-      return of([]);
-    }
+      if (!token) {
+        observer.next([]);
+        observer.complete();
+        return;
+      }
 
-    const decodedToken: any = jwtDecode(token);
+      const decodedToken: any = jwtDecode(token);
+      const roles = decodedToken?.role ? (Array.isArray(decodedToken.role) ? decodedToken.role : [decodedToken.role]) : [];
 
-    return of(decodedToken?.role ? (Array.isArray(decodedToken.role) ? decodedToken.role : [decodedToken.role]) : []);
+      observer.next(roles);
+      observer.complete();
+    })
   }
 
   isAdmin(): Observable<boolean> {

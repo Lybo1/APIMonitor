@@ -1,11 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 using APIMonitor.server.Data;
 using APIMonitor.server.Data.Enumerations;
+using APIMonitor.server.Hubs;
 using APIMonitor.server.Models;
 using APIMonitor.server.Services.BannedIpService;
 using APIMonitor.server.Services.ThreatDetectionService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
@@ -19,12 +21,13 @@ public class BannedIpAdminController : ControllerBase
 {
     private readonly IBannedIpService bannedIpService;
     private readonly IThreatDetectionService threatDetectionService;
+    private readonly IHubContext<NotificationHub> hubContext;
     
-
-    public BannedIpAdminController(IThreatDetectionService threatDetectionService, IBannedIpService bannedIpService)
+    public BannedIpAdminController(IThreatDetectionService threatDetectionService, IBannedIpService bannedIpService, IHubContext<NotificationHub> hubContext)
     {
         this.bannedIpService = bannedIpService ?? throw new ArgumentNullException(nameof(bannedIpService));
         this.threatDetectionService = threatDetectionService ?? throw new ArgumentNullException(nameof(threatDetectionService));
+        this.hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
     }
 
     [HttpGet]
@@ -57,6 +60,7 @@ public class BannedIpAdminController : ControllerBase
         }
 
         await threatDetectionService.LogThreatAsync(ipAddress, AlertType.IpUnbanned, "Admin removed ban", AlertSeverity.Low);
+        await hubContext.Clients.All.SendAsync("ReceiveNotification", $"✅ IP {ipAddress} has been unbanned!");
 
         return Ok(new { message = $"IP {ipAddress} has been successfully unbanned by {adminName}." });
     }
