@@ -1,0 +1,8 @@
+{
+  "401": "Unauthorized access. Please log in.",
+  "403": "Forbidden. You do not have permission to view this resource.",
+  "404": "Page not found.",
+  "500": "Internal server error. Please try again later.",
+  "network": "Network error. Please check your connection.",
+  "general": "Something went wrong. Please try again."
+}
