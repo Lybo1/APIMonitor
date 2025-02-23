@@ -12,7 +12,6 @@ const RegisterPage: React.FC = () => {
         rememberMe: "true",
     });
 
-    // Modal and error state
     const [error, setError] = useState<string | null>(null);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -22,40 +21,58 @@ const RegisterPage: React.FC = () => {
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Validate form fields
         if (!formData.email || !formData.password || !formData.confirmPassword) {
             setError("Please fill in all fields.");
             return;
         }
 
-        // Validate email format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
         if (!emailRegex.test(formData.email)) {
             setError("Invalid email format.");
             return;
         }
 
-        // Check if passwords match
         if (formData.password !== formData.confirmPassword) {
             setError("Passwords do not match!");
             return;
         }
 
         try {
-            const rememberMeBool = formData.rememberMe === "true"; // Convert to boolean
-            await register(
-                formData.email,
-                formData.password,
-                formData.confirmPassword,
-                rememberMeBool
-            );
-            console.log("Registration successful!");
-        } catch (error) {
+            const rememberMeBool = formData.rememberMe === "true";
+            // await register(
+            //     formData.email,
+            //     formData.password,
+            //     formData.confirmPassword,
+            //     rememberMeBool
+            // );
+
+            const response = await fetch("http://localhost:5028/api/Register/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json",
+                Accept: "application/json",
+                },
+                body: JSON.stringify({
+                    email: formData.email,
+                    password: formData.password,
+                    confirmPassword: formData.confirmPassword,
+                    rememberMe: rememberMeBool,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                console.log("Successfully registered!");
+            } else {
+                setError(data.message || 'Register failed.');
+            }
+
+        } catch {
             setError("Registration failed. Please try again.");
         }
     };
 
-    // Close modal
     const closeModal = () => {
         setError(null);
     };

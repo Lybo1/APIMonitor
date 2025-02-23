@@ -1,6 +1,6 @@
 import axiosInstance from "../api/axiosInstance.ts";
 
-const API_URL = '';
+const API_URL = 'http://localhost:5028/api/Register/register';
 
 export const authService = {
     async login(email: string, password: string, rememberMe: boolean) {
