@@ -36,7 +36,7 @@ public class RegisterController : ControllerBase
             return Conflict(new { message = "Email is already taken." });
         }
 
-        User newUser = new User
+        User newUser = new()
         {
             UserName = model.Email,
             Email = model.Email,
@@ -59,7 +59,7 @@ public class RegisterController : ControllerBase
         if (!isInRole)
         {
             IdentityRole<int>? existingRole = await roleService.GetAllRolesAsync()
-                                                          .ContinueWith(t => t.Result.FirstOrDefault(r => r.Name == defaultRole));
+                .ContinueWith(t => t.Result.FirstOrDefault(r => r.Name == defaultRole));
 
             if (existingRole is null)
             {
@@ -80,8 +80,8 @@ public class RegisterController : ControllerBase
         return Ok(new
         {
             message = "User registered successfully.",
-            accessToken = model.RememberMe ? accessToken : string.Empty,
-            refreshToken = model.RememberMe ? refreshToken : string.Empty
+            accessToken = accessToken,
+            refreshToken = refreshToken
         });
     }
 }
