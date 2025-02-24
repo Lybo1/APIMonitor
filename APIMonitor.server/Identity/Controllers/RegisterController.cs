@@ -52,7 +52,7 @@ public class RegisterController : ControllerBase
             return BadRequest(new { message = errors });
         }
 
-        string defaultRole = "User";
+        const string defaultRole = "User";
         
         bool isInRole = await userManager.IsInRoleAsync(newUser, defaultRole);
 
@@ -77,17 +77,11 @@ public class RegisterController : ControllerBase
         string accessToken = await tokenService.GenerateShortLivedAccessToken(newUser);
         string refreshToken = await tokenService.GenerateLongLivedRefreshToken(newUser);
 
-        if (model.RememberMe)
-        {
-            tokenService.IssueShortLivedAccessToken(accessToken);
-            tokenService.IssueLongLivedRefreshToken(refreshToken);
-        }
-
         return Ok(new
         {
             message = "User registered successfully.",
-            accessToken = model.RememberMe ? null : accessToken,
-            refreshToken = model.RememberMe ? null : refreshToken
+            accessToken = model.RememberMe ? accessToken : string.Empty,
+            refreshToken = model.RememberMe ? refreshToken : string.Empty
         });
     }
 }

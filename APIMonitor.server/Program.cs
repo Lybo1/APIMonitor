@@ -247,11 +247,19 @@ using APIMonitor.server.Services.ApiScannerService;
 using APIMonitor.server.Services.ThreatDetectionService;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using APIMonitor.server.Identity.Services.RoleServices;
+using APIMonitor.server.Identity.Services.TokenServices;
+using APIMonitor.server.Middleware;
+using APIMonitor.server.Services.AuditLogService;
+using APIMonitor.server.Services.GeoLocationService;
+using APIMonitor.server.Services.IpBlockService;
+using APIMonitor.server.Services.MacAddressService;
+using APIMonitor.server.Services.NotificationsService;
+using APIMonitor.server.Services.RateLimitService;
 using Polly;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-// Configure logging
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
     .WriteTo.Console()
@@ -259,11 +267,10 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
-// Setup DBContext
 string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 
-// Setup Identity
 builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
 {
     options.SignIn.RequireConfirmedAccount = true;
@@ -278,7 +285,6 @@ builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-// Authentication setup
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -303,14 +309,22 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// Add services
 builder.Services.AddControllers();
 builder.Services.AddMemoryCache();
 
-// Background service
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
 builder.Services.AddHostedService<ApiScannerBackgroundService>();
 
-// Resilient API scanner
 builder.Services.AddHttpClient<IApiScannerService, ApiScannerService>()
     .AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(5)))
     .AddPolicyHandler(Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
@@ -318,7 +332,19 @@ builder.Services.AddHttpClient<IApiScannerService, ApiScannerService>()
     .AddPolicyHandler(Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
         .CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
 
-// Swagger setup
+builder.Services.AddDataProtection();
+// builder.Services.AddHttpClient<IGeoLocationService, ApiGeoLocationService>();
+// builder.Services.AddScoped<IAuditLogService, AuditLogService>();
+// builder.Services.AddScoped<IGeoLocationService, ApiGeoLocationService>();
+// builder.Services.AddScoped<IIpBlockService, IpBlockService>();
+// builder.Services.AddScoped<IMacAddressService, MacAddressService>();
+// builder.Services.AddScoped<INotificationService, NotificationService>();
+// builder.Services.AddScoped<IRateLimitService, RateLimitService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+// builder.Services.AddScoped<RoleManager<IdentityRole<int>>>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+// builder.Services.AddScoped<IThreatDetectionService, ThreatDetectionService>();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -347,10 +373,12 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// Build app
 WebApplication app = builder.Build();
 
-// Enable Swagger in Development environment
+// app.UseMiddleware<AuditLoggingMiddleware>();
+// app.UseMiddleware<IpBanMiddleware>();
+// app.UseMiddleware<RequestInfoMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -363,12 +391,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseRouting();
 
-// Authentication and Authorization middleware
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Map controllers
 app.MapControllers();
 
-// Run the application
 app.Run();

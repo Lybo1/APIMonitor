@@ -11,15 +11,13 @@ public class User : IdentityUser<int>
 {
     
     
-    [Required]
     [StringLength(50, MinimumLength = 2, ErrorMessage = "First name must be between 2 and 50 characters.")]
     [RegularExpression(@"^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$", ErrorMessage = "First name must contain only letters and spaces.")]
-    public string FirstName { get; set; } = null!;
-
-    [Required]
+    public string? FirstName { get; set; } = null;
+    
     [StringLength(50, MinimumLength = 2, ErrorMessage = "Last name must be between 2 and 50 characters.")]
     [RegularExpression(@"^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$", ErrorMessage = "Last name must contain only letters and spaces.")]
-    public string LastName { get; set; } = null!;
+    public string? LastName { get; set; } = null;
     
     [NotMapped]
     public string FullName => $"{FirstName} {LastName}";

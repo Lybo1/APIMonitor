@@ -19,6 +19,8 @@ public class TokenService : ITokenService
     private readonly IMemoryCache memoryCache;
     private readonly JwtSecurityTokenHandler handler;
 
+    private readonly byte[] encryptionKey;
+    
     public TokenService(UserManager<User> userManager, 
                         IConfiguration configuration, 
                         IHttpContextAccessor httpContextAccessor, 
@@ -29,11 +31,29 @@ public class TokenService : ITokenService
         this.httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         this.memoryCache = memoryCache ?? throw new ArgumentNullException(nameof(memoryCache));
         this.handler = new JwtSecurityTokenHandler();
+
+        string key = configuration["JWT:Key"];
+
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            throw new ApplicationException("Encryption key is missing or invalid.");
+        }
+
+        encryptionKey = Convert.FromBase64String(key);
+        
+        if (encryptionKey.Length != 16 && encryptionKey.Length != 24 && encryptionKey.Length != 32)
+        {
+            throw new ApplicationException("Invalid encryption key size. Must be 16, 24, or 32 bytes.");
+        }
+        
+        Console.WriteLine($"Encryption Key Length: {encryptionKey.Length}");
     }
     
     public async Task<string> GenerateShortLivedAccessToken(User user)
     {
         ArgumentNullException.ThrowIfNull(user, nameof(user));
+        
+        Console.WriteLine($"Generating Access Token for: {user.Email}");
 
         IList<string> roles = await userManager.GetRolesAsync(user);
         
@@ -65,6 +85,8 @@ public class TokenService : ITokenService
         string token = handler.WriteToken(handler.CreateToken(tokenDescriptor));
 
         memoryCache.Set($"jti_{jti}", true, TimeSpan.FromMinutes(Constants.DefaultAccessTokenExpirationMinutes));
+        
+        Console.WriteLine($"Generated JTI: {jti}");
 
         return token;
     }
@@ -72,6 +94,8 @@ public class TokenService : ITokenService
     public async Task<string> GenerateLongLivedRefreshToken(User user)
     {
         ArgumentNullException.ThrowIfNull(user, nameof(user));
+        
+        Console.WriteLine($"Generating Refresh Token for: {user.Email}");
 
         string refreshToken = GenerateSecureToken();
         string hashedRefreshToken = EncryptRefreshToken(refreshToken); 
@@ -87,7 +111,9 @@ public class TokenService : ITokenService
     public async Task<TokenResponse> RefreshTokenAsync(string refreshToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(refreshToken, "Invalid refresh token.");
-
+        
+        Console.WriteLine($"Attempting to refresh token: {refreshToken}");
+        
         string? ipAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
         string? userAgent = httpContextAccessor.HttpContext?.Request.Headers.UserAgent.ToString();
         
@@ -102,6 +128,8 @@ public class TokenService : ITokenService
 
         if (user is null || user.RefreshTokenExpiry < DateTime.UtcNow)
         {
+            Console.WriteLine("Invalid or expired refresh token.");
+            
             throw new SecurityTokenException("Invalid or expired refresh token.");
         }
 
@@ -113,6 +141,8 @@ public class TokenService : ITokenService
             if (storedIp != ipAddress || storedUserAgent != userAgent)
             {
                 await RevokeRefreshTokenAsync(user);
+                
+                Console.WriteLine("Suspicious login detected for user: " + user.Email);
 
                 throw new SecurityTokenException("Suspicious login detected. Please re-authenticate.");
             }
@@ -145,6 +175,8 @@ public class TokenService : ITokenService
             SameSite = SameSiteMode.None,
             Expires = DateTime.UtcNow.AddMinutes(Constants.DefaultAccessTokenExpirationMinutes)
         });
+        
+        Console.WriteLine("Issued access token cookie.");
     }
 
     public void IssueLongLivedRefreshToken(string refreshToken)
@@ -158,6 +190,8 @@ public class TokenService : ITokenService
             SameSite = SameSiteMode.None,
             Expires = DateTime.UtcNow.AddDays(Constants.RefreshTokenExpirationDays)
         });
+        
+        Console.WriteLine("Issued refresh token cookie.");
     }
     
     private static string GenerateSecureToken()
@@ -173,16 +207,42 @@ public class TokenService : ITokenService
     private string EncryptRefreshToken(string token)
     {
         using Aes aes = Aes.Create();
-        aes.Key = Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!);
-        aes.IV = new byte[16];
-        
-        using ICryptoTransform encryptor = aes.CreateEncryptor();
-        byte[] tokenBytes = Encoding.UTF8.GetBytes(token);
-        byte[] encryptedBytes = encryptor.TransformFinalBlock(tokenBytes, 0, tokenBytes.Length);
-        
-        return Convert.ToBase64String(encryptedBytes);
-    }
 
+        aes.Key = encryptionKey;
+        aes.GenerateIV();
+        
+        using ICryptoTransform encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
+        using MemoryStream ms = new();
+        
+        ms.Write(aes.IV, 0, aes.IV.Length);
+        
+        using CryptoStream cs = new(ms, encryptor, CryptoStreamMode.Write);
+        using StreamWriter sw = new(cs);
+        
+        sw.Write(token);
+        sw.Flush();
+        cs.FlushFinalBlock();
+    
+        return Convert.ToBase64String(ms.ToArray());
+    }
+    
+    private string DecryptRefreshToken(string encryptedToken)
+    {
+        byte[] fullCipher = Convert.FromBase64String(encryptedToken);
+
+        using Aes aes = Aes.Create();
+    
+        aes.Key = encryptionKey;
+        aes.IV = fullCipher.Take(16).ToArray(); 
+
+        using ICryptoTransform decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
+        using MemoryStream ms = new(fullCipher, 16, fullCipher.Length - 16); 
+        using CryptoStream cs = new(ms, decryptor, CryptoStreamMode.Read);
+        using StreamReader sr = new(cs);
+    
+        return sr.ReadToEnd();
+    }
+    
     private SymmetricSecurityKey GetSecurityKey()
     {
         string jsonKey = configuration["Jwt:Key"] ?? throw new ApplicationException("JWT Key is missing.");
