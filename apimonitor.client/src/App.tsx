@@ -1,15 +1,15 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import RegisterPage from "./pages/Register";
-import { AuthProvider } from "./context/AuthContext";
+import Homepage from "./pages/Homepage.tsx";
 
-function App() {
+const App = () => {
     return (
         <BrowserRouter>
-            <AuthProvider>
                 <Routes>
+                    <Route path="/" element={<Navigate to="/register" />} />
                     <Route path="/register" element={<RegisterPage />} />
+                    <Route path="/homepage" element={<Homepage />} />
                 </Routes>
-            </AuthProvider>
         </BrowserRouter>
     );
 }

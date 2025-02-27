@@ -1,21 +1,31 @@
 "use client";
 import React, { useState } from "react";
-import { useAuth } from "../context/AuthContext";
 import { motion } from "framer-motion";
+import useCustomNavigate from "../utils/navigation.ts";
 
 const RegisterPage: React.FC = () => {
-    const { register } = useAuth();
+    const { redirectToHome } = useCustomNavigate();
+
     const [formData, setFormData] = useState({
         email: "",
         password: "",
         confirmPassword: "",
-        rememberMe: "true",
+        rememberMe: true,
     });
 
     const [error, setError] = useState<string | null>(null);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value, type } = e.target;
+
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === "radio" ? value === "true" : value,
+        }));
+
+        if (error) {
+            setError(null);
+        }
     };
 
     const handleRegister = async (e: React.FormEvent) => {
@@ -39,37 +49,37 @@ const RegisterPage: React.FC = () => {
         }
 
         try {
-            const rememberMeBool = formData.rememberMe === "true";
-            // await register(
-            //     formData.email,
-            //     formData.password,
-            //     formData.confirmPassword,
-            //     rememberMeBool
-            // );
-
             const response = await fetch("http://localhost:5028/api/Register/register", {
                 method: "POST",
-                headers: { "Content-Type": "application/json",
-                Accept: "application/json",
+                headers: {
+                    "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
                     email: formData.email,
                     password: formData.password,
                     confirmPassword: formData.confirmPassword,
-                    rememberMe: rememberMeBool,
+                    rememberMe: formData.rememberMe,
                 }),
             });
 
-            const data = await response.json();
-
-            if (response.ok) {
-                console.log("Successfully registered!");
-            } else {
-                setError(data.message || 'Register failed.');
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error("Server response error:", errorData);
+                setError(errorData?.message || "An error occurred.");
+                return;
             }
 
-        } catch {
-            setError("Registration failed. Please try again.");
+            const responseData = await response.json();
+
+            if (responseData.message === "User registered successfully.") {
+                console.log("Registration success", responseData);
+                redirectToHome();
+            } else {
+                setError("Unexpected response from server.");
+            }
+        } catch (error) {
+            console.error("Fetch error:", error);
+            setError("Error occurred while making the request.");
         }
     };
 
@@ -146,7 +156,7 @@ const RegisterPage: React.FC = () => {
                                         type="radio"
                                         name="rememberMe"
                                         value="true"
-                                        checked={formData.rememberMe === "true"}
+                                        checked={formData.rememberMe}
                                         onChange={handleChange}
                                         className="accent-white peer"
                                     />
@@ -157,7 +167,7 @@ const RegisterPage: React.FC = () => {
                                         type="radio"
                                         name="rememberMe"
                                         value="false"
-                                        checked={formData.rememberMe === "false"}
+                                        checked={formData.rememberMe}
                                         onChange={handleChange}
                                         className="accent-white peer"
                                     />
@@ -170,6 +180,7 @@ const RegisterPage: React.FC = () => {
                     <div>
                         <button
                             type="submit"
+                            disabled={!!error || !formData.email || !formData.password || !formData.confirmPassword}
                             className="w-full py-3 bg-white text-gray-900 font-semibold rounded-md shadow-md transition-all ease-in-out hover:bg-gray-100 hover:scale-105"
                         >
                             Submit
@@ -180,7 +191,10 @@ const RegisterPage: React.FC = () => {
 
             {error && (
                 <div className="fixed inset-0 flex justify-center items-center bg-black/50 z-50">
-                    <div className="bg-red-600 text-white p-6 rounded-lg shadow-lg max-w-md w-full text-center">
+                    <motion.div className="bg-red-600 text-white p-6 rounded-lg shadow-lg max-w-md w-full text-center"
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: 1 }}
+                    >
                         <p className="mb-4">{error}</p>
                         <button
                             onClick={closeModal}
@@ -188,7 +202,7 @@ const RegisterPage: React.FC = () => {
                         >
                             Close
                         </button>
-                    </div>
+                    </motion.div>
                 </div>
             )}
         </div>
