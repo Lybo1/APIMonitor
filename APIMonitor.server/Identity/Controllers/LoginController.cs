@@ -18,9 +18,9 @@ public class LoginController : ControllerBase
 
     public LoginController(UserManager<User> userManager, SignInManager<User> signInManager, ITokenService tokenService)
     {
-        userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
-        signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
-        tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
+        this.userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+        this.signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
+        this.tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
     }
 
     [HttpPost("login")]
@@ -45,20 +45,27 @@ public class LoginController : ControllerBase
             return Unauthorized(new { message = "Username or password is incorrect." });
         }
         
-        string accessToken = await tokenService.GenerateShortLivedAccessToken(user);
-        string refreshToken = await tokenService.GenerateLongLivedRefreshToken(user);
-
         if (model.RememberMe)
         {
-            tokenService.IssueShortLivedAccessToken(accessToken);
+            string refreshToken = await tokenService.GenerateLongLivedRefreshToken(user);
             tokenService.IssueLongLivedRefreshToken(refreshToken);
+
+            return Ok(new
+            {
+                message = "Login successful.",
+                AccessToken = string.Empty, 
+                RefreshToken = refreshToken
+            });
         }
         
+        string accessToken = await tokenService.GenerateShortLivedAccessToken(user);
+        tokenService.IssueShortLivedAccessToken(accessToken);
+
         return Ok(new
         {
             message = "Login successful.",
-            AccessToken = model.RememberMe ? null : accessToken,
-            RefreshToken = model.RememberMe ? null : refreshToken
+            AccessToken = accessToken,
+            RefreshToken = string.Empty
         });
     }
 

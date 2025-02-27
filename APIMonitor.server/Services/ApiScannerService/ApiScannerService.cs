@@ -62,7 +62,7 @@ public class ApiScannerService : IApiScannerService
             .Select(api => api.Url)
             .ToListAsync();
 
-        if (!apiUrls.Any())
+        if (apiUrls.Count == 0)
         {
             logger.LogWarning("⚠️ No active APIs found to scan.");
             return;

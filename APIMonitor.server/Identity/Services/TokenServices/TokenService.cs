@@ -32,7 +32,7 @@ public class TokenService : ITokenService
         this.memoryCache = memoryCache ?? throw new ArgumentNullException(nameof(memoryCache));
         this.handler = new JwtSecurityTokenHandler();
 
-        string key = configuration["JWT:Key"];
+        string? key = configuration["JWT:Key"];
 
         if (string.IsNullOrWhiteSpace(key))
         {

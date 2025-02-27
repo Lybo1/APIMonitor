@@ -1,8 +1,11 @@
+using APIMonitor.server.Data;
 using APIMonitor.server.Identity.Services.RoleServices;
 using APIMonitor.server.Identity.Services.TokenServices;
 using APIMonitor.server.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 
 namespace APIMonitor.server.Identity.Controllers;
 
@@ -21,6 +24,7 @@ public class RegisterController : ControllerBase
         this.tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
     }
 
+    [AllowAnonymous]
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterViewModel? model)
     {
@@ -73,15 +77,23 @@ public class RegisterController : ControllerBase
             
             await userManager.AddToRoleAsync(newUser, defaultRole);
         }
-        
-        string accessToken = await tokenService.GenerateShortLivedAccessToken(newUser);
-        string refreshToken = await tokenService.GenerateLongLivedRefreshToken(newUser);
 
+        string token = model.RememberMe
+            ? await tokenService.GenerateLongLivedRefreshToken(newUser)
+            : await tokenService.GenerateShortLivedAccessToken(newUser);
+        
+        Response.Cookies.Append("AuthToken", token, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.None,
+            Expires = model.RememberMe ? DateTimeOffset.UtcNow.AddDays(Constants.RefreshTokenExpirationDays) : DateTimeOffset.UtcNow.AddHours(Constants.DefaultAccessTokenExpirationMinutes)
+        });
+        
         return Ok(new
         {
             message = "User registered successfully.",
-            accessToken = accessToken,
-            refreshToken = refreshToken
+            TokenType = model.RememberMe ? "LongLivedRefreshToken" : "ShortLivedAccessToken"
         });
     }
 }

@@ -47,12 +47,11 @@ public class RefreshTokenController : ControllerBase
         {
             if (memoryCache.TryGetValue($"used_refresh_{refreshTokenHash}", out _))
             {
-                return Unauthorized(new
-                    { message = $"Refresh token has already been used or revoked. Re-login required." });
+                return Unauthorized(new { message = $"Refresh token has already been used or revoked. Re-login required." });
             }
 
             TokenResponse newToken = await tokenService.RefreshTokenAsync(refreshToken);
-
+            
             memoryCache.Set($"used_refresh_{refreshTokenHash}", true, TimeSpan.FromDays(7));
             memoryCache.Set($"refresh_meta_{refreshTokenHash}", new { IP = ipAddress, UserAgent = userAgent },
                 TimeSpan.FromDays(7));

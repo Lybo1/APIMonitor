@@ -13,7 +13,7 @@ public class ApiScannerBackgroundService : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            using (var scope = serviceProvider.CreateScope())
+            using (IServiceScope scope = serviceProvider.CreateScope())
             {
                 IApiScannerService apiScannerService = scope.ServiceProvider.GetRequiredService<IApiScannerService>();
 
