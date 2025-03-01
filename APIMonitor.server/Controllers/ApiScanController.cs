@@ -32,7 +32,6 @@ public class ApiScanController : ControllerBase
     public async Task<IActionResult> ScanApis([FromHeader]string id)
     {
         await apiScannerService.ScanApisAsync();
-
         await hubContext.Clients.User(id).SendAsync("ReceiveNotification", "API scan triggered!");
         
         return Ok(new { message = "Manual API scan triggered successfully!" });
@@ -59,25 +58,60 @@ public class ApiScanController : ControllerBase
         try
         {
             using HttpClient client = new();
+            Stopwatch totalStopwatch = Stopwatch.StartNew();
+            Stopwatch stepStopwatch = Stopwatch.StartNew();
             
-            Stopwatch stopwatch = Stopwatch.StartNew();
-            HttpResponseMessage response = await client.GetAsync(apiUrl);
-            stopwatch.Stop();
+            await hubContext.Clients.User(userId).SendAsync("ReceiveNotification", $"Resolving and connecting to {apiUrl}");
+            
+            var request = new HttpRequestMessage(HttpMethod.Get, apiUrl);
+            stepStopwatch.Restart();
+            
+            await hubContext.Clients.User(userId).SendAsync("ReceiveNotification", $"Sending GET request to {apiUrl}...");
+            var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+            
+            stepStopwatch.Stop();
+            
+            double headersTime = stepStopwatch.Elapsed.TotalMilliseconds;
+            await hubContext.Clients.User(userId).SendAsync("ReceiveNotification", $"Headers received: {response.StatusCode} ({(int)response.StatusCode}) in {headersTime:F2}ms");
 
+            stepStopwatch.Restart();
+            
+            await hubContext.Clients.User(userId).SendAsync("ReceiveNotification", "Reading response body...");
+            string responseBody = await response.Content.ReadAsStringAsync();
+            
+            stepStopwatch.Stop();
+
+            double bodyTime = stepStopwatch.Elapsed.TotalMilliseconds;
+
+            totalStopwatch.Stop();
+            
             var result = new
             {
                 totalRequests = 1,
-                averageResponseTime = stopwatch.Elapsed.TotalMilliseconds,
-                errorsCount = response.IsSuccessStatusCode ? 0 : 1
+                headersResponseTime = headersTime,
+                totalResponseTime = headersTime + bodyTime, 
+                errorsCount = response.IsSuccessStatusCode ? 0 : 1,
+                statusCode = (int)response.StatusCode,
+                responseBody = responseBody.Length > 500 ? responseBody.Substring(0, 500) + "..." : responseBody
             };
             
             await auditLogService.LogActionAsync(int.Parse(userId), "ScanSingleApi", $"Scanned {apiUrl} - Success: {response.IsSuccessStatusCode}", startTime);
             await notificationService.SendNotificationAsync(userId, "API Scan", $"Scanned {apiUrl}: {result.errorsCount} errors.", HttpContext);
+            await hubContext.Clients.User(userId).SendAsync("ReceiveNotification", $"Scan completed - Status: {result.statusCode}, Headers: {result.headersResponseTime:F2}ms, Total: {result.totalResponseTime:F2}ms, Errors: {result.errorsCount}");
 
             return Ok(result);
         }
+        catch (HttpRequestException ex)
+        {
+            await hubContext.Clients.User(userId).SendAsync("ReceiveNotification", $"Scan failed: {ex.Message}");
+            await auditLogService.LogActionAsync(int.Parse(userId), "ScanSingleApiFailed", $"Failed to scan {apiUrl}: {ex.Message}", startTime);
+            await notificationService.SendNotificationAsync(userId, "Scan Failed", $"Failed to scan {apiUrl}: {ex.Message}", HttpContext);
+            
+            return StatusCode(500, new { message = $"Scan failed: {ex.Message}" });
+        }
         catch (Exception ex)
         {
+            await hubContext.Clients.User(userId).SendAsync("ReceiveNotification", $"Unexpected error: {ex.Message}");
             await auditLogService.LogActionAsync(int.Parse(userId), "ScanSingleApiFailed", $"Failed to scan {apiUrl}: {ex.Message}", startTime);
             await notificationService.SendNotificationAsync(userId, "Scan Failed", $"Failed to scan {apiUrl}: {ex.Message}", HttpContext);
             

@@ -457,12 +457,6 @@
       "Microsoft.AspNetCore.Connections.Abstractions/9.0.2": {
         "dependencies": {
           "Microsoft.Extensions.Features": "9.0.2"
-        },
-        "runtime": {
-          "lib/net9.0/Microsoft.AspNetCore.Connections.Abstractions.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.225.6704"
-          }
         }
       },
       "Microsoft.AspNetCore.Cryptography.Internal/9.0.1": {},
@@ -617,12 +611,6 @@
         "dependencies": {
           "Microsoft.AspNetCore.Connections.Abstractions": "9.0.2",
           "Microsoft.Extensions.Options": "9.0.2"
-        },
-        "runtime": {
-          "lib/net9.0/Microsoft.AspNetCore.SignalR.Common.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.225.6704"
-          }
         }
       },
       "Microsoft.AspNetCore.SignalR.Core/1.2.0": {
@@ -640,12 +628,6 @@
       "Microsoft.AspNetCore.SignalR.Protocols.Json/9.0.2": {
         "dependencies": {
           "Microsoft.AspNetCore.SignalR.Common": "9.0.2"
-        },
-        "runtime": {
-          "lib/net9.0/Microsoft.AspNetCore.SignalR.Protocols.Json.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.225.6704"
-          }
         }
       },
       "Microsoft.AspNetCore.WebSockets/2.3.0": {
@@ -1026,22 +1008,22 @@
           "runtimes/win-arm/native/Microsoft.Data.SqlClient.SNI.dll": {
             "rid": "win-arm",
             "assetType": "native",
-            "fileVersion": "0.0.0.0"
+            "fileVersion": "5.2.0.0"
           },
           "runtimes/win-arm64/native/Microsoft.Data.SqlClient.SNI.dll": {
             "rid": "win-arm64",
             "assetType": "native",
-            "fileVersion": "0.0.0.0"
+            "fileVersion": "5.2.0.0"
           },
           "runtimes/win-x64/native/Microsoft.Data.SqlClient.SNI.dll": {
             "rid": "win-x64",
             "assetType": "native",
-            "fileVersion": "0.0.0.0"
+            "fileVersion": "5.2.0.0"
           },
           "runtimes/win-x86/native/Microsoft.Data.SqlClient.SNI.dll": {
             "rid": "win-x86",
             "assetType": "native",
-            "fileVersion": "0.0.0.0"
+            "fileVersion": "5.2.0.0"
           }
         }
       },
@@ -1171,34 +1153,16 @@
         "dependencies": {
           "Microsoft.Extensions.Configuration.Abstractions": "9.0.2",
           "Microsoft.Extensions.Primitives": "9.0.2"
-        },
-        "runtime": {
-          "lib/net9.0/Microsoft.Extensions.Configuration.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.225.6610"
-          }
         }
       },
       "Microsoft.Extensions.Configuration.Abstractions/9.0.2": {
         "dependencies": {
           "Microsoft.Extensions.Primitives": "9.0.2"
-        },
-        "runtime": {
-          "lib/net9.0/Microsoft.Extensions.Configuration.Abstractions.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.225.6610"
-          }
         }
       },
       "Microsoft.Extensions.Configuration.Binder/9.0.2": {
         "dependencies": {
           "Microsoft.Extensions.Configuration.Abstractions": "9.0.2"
-        },
-        "runtime": {
-          "lib/net9.0/Microsoft.Extensions.Configuration.Binder.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.225.6610"
-          }
         }
       },
       "Microsoft.Extensions.Configuration.EnvironmentVariables/2.1.1": {
@@ -1221,22 +1185,9 @@
       "Microsoft.Extensions.DependencyInjection/9.0.2": {
         "dependencies": {
           "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.2"
-        },
-        "runtime": {
-          "lib/net9.0/Microsoft.Extensions.DependencyInjection.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.225.6610"
-          }
         }
       },
-      "Microsoft.Extensions.DependencyInjection.Abstractions/9.0.2": {
-        "runtime": {
-          "lib/net9.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.225.6610"
-          }
-        }
-      },
+      "Microsoft.Extensions.DependencyInjection.Abstractions/9.0.2": {},
       "Microsoft.Extensions.DependencyInjection.AutoActivation/9.2.0": {
         "dependencies": {
           "Microsoft.Extensions.Hosting.Abstractions": "9.0.2"
@@ -1261,24 +1212,12 @@
           "Microsoft.Extensions.Configuration": "9.0.2",
           "Microsoft.Extensions.Diagnostics.Abstractions": "9.0.2",
           "Microsoft.Extensions.Options.ConfigurationExtensions": "9.0.2"
-        },
-        "runtime": {
-          "lib/net9.0/Microsoft.Extensions.Diagnostics.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.225.6610"
-          }
         }
       },
       "Microsoft.Extensions.Diagnostics.Abstractions/9.0.2": {
         "dependencies": {
           "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.2",
           "Microsoft.Extensions.Options": "9.0.2"
-        },
-        "runtime": {
-          "lib/net9.0/Microsoft.Extensions.Diagnostics.Abstractions.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.225.6610"
-          }
         }
       },
       "Microsoft.Extensions.Diagnostics.ExceptionSummarization/9.2.0": {
@@ -1292,23 +1231,10 @@
           }
         }
       },
-      "Microsoft.Extensions.Features/9.0.2": {
-        "runtime": {
-          "lib/net9.0/Microsoft.Extensions.Features.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.225.6704"
-          }
-        }
-      },
+      "Microsoft.Extensions.Features/9.0.2": {},
       "Microsoft.Extensions.FileProviders.Abstractions/9.0.2": {
         "dependencies": {
           "Microsoft.Extensions.Primitives": "9.0.2"
-        },
-        "runtime": {
-          "lib/net9.0/Microsoft.Extensions.FileProviders.Abstractions.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.225.6610"
-          }
         }
       },
       "Microsoft.Extensions.FileProviders.Physical/3.1.0": {
@@ -1325,12 +1251,6 @@
           "Microsoft.Extensions.Diagnostics.Abstractions": "9.0.2",
           "Microsoft.Extensions.FileProviders.Abstractions": "9.0.2",
           "Microsoft.Extensions.Logging.Abstractions": "9.0.2"
-        },
-        "runtime": {
-          "lib/net9.0/Microsoft.Extensions.Hosting.Abstractions.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.225.6610"
-          }
         }
       },
       "Microsoft.Extensions.Http/9.0.2": {
@@ -1341,12 +1261,6 @@
           "Microsoft.Extensions.Logging": "9.0.2",
           "Microsoft.Extensions.Logging.Abstractions": "9.0.2",
           "Microsoft.Extensions.Options": "9.0.2"
-        },
-        "runtime": {
-          "lib/net9.0/Microsoft.Extensions.Http.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.225.6610"
-          }
         }
       },
       "Microsoft.Extensions.Http.Diagnostics/9.2.0": {
@@ -1410,23 +1324,11 @@
           "Microsoft.Extensions.DependencyInjection": "9.0.2",
           "Microsoft.Extensions.Logging.Abstractions": "9.0.2",
           "Microsoft.Extensions.Options": "9.0.2"
-        },
-        "runtime": {
-          "lib/net9.0/Microsoft.Extensions.Logging.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.225.6610"
-          }
         }
       },
       "Microsoft.Extensions.Logging.Abstractions/9.0.2": {
         "dependencies": {
           "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.2"
-        },
-        "runtime": {
-          "lib/net9.0/Microsoft.Extensions.Logging.Abstractions.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.225.6610"
-          }
         }
       },
       "Microsoft.Extensions.Logging.ApplicationInsights/2.22.0": {
@@ -1451,32 +1353,13 @@
           "Microsoft.Extensions.Logging.Abstractions": "9.0.2",
           "Microsoft.Extensions.Options": "9.0.2",
           "Microsoft.Extensions.Options.ConfigurationExtensions": "9.0.2"
-        },
-        "runtime": {
-          "lib/net9.0/Microsoft.Extensions.Logging.Configuration.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.225.6610"
-          }
         }
       },
-      "Microsoft.Extensions.ObjectPool/9.0.2": {
-        "runtime": {
-          "lib/net9.0/Microsoft.Extensions.ObjectPool.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.225.6704"
-          }
-        }
-      },
+      "Microsoft.Extensions.ObjectPool/9.0.2": {},
       "Microsoft.Extensions.Options/9.0.2": {
         "dependencies": {
           "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.2",
           "Microsoft.Extensions.Primitives": "9.0.2"
-        },
-        "runtime": {
-          "lib/net9.0/Microsoft.Extensions.Options.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.225.6610"
-          }
         }
       },
       "Microsoft.Extensions.Options.ConfigurationExtensions/9.0.2": {
@@ -1486,22 +1369,9 @@
           "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.2",
           "Microsoft.Extensions.Options": "9.0.2",
           "Microsoft.Extensions.Primitives": "9.0.2"
-        },
-        "runtime": {
-          "lib/net9.0/Microsoft.Extensions.Options.ConfigurationExtensions.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.225.6610"
-          }
         }
       },
-      "Microsoft.Extensions.Primitives/9.0.2": {
-        "runtime": {
-          "lib/net9.0/Microsoft.Extensions.Primitives.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.225.6610"
-          }
-        }
-      },
+      "Microsoft.Extensions.Primitives/9.0.2": {},
       "Microsoft.Extensions.Resilience/9.2.0": {
         "dependencies": {
           "Microsoft.Extensions.Diagnostics": "9.0.2",
@@ -2304,14 +2174,7 @@
           "System.Security.Principal.Windows": "4.7.0"
         }
       },
-      "System.IO.Pipelines/9.0.2": {
-        "runtime": {
-          "lib/net9.0/System.IO.Pipelines.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.225.6610"
-          }
-        }
-      },
+      "System.IO.Pipelines/9.0.2": {},
       "System.Memory/4.5.5": {},
       "System.Memory.Data/1.0.2": {
         "dependencies": {

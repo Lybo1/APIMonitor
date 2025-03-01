@@ -52,48 +52,36 @@ public class LoginController : ControllerBase
 
         if (result.IsLockedOut)
         {
+            await auditLogService.LogActionAsync(user.Id, "LoginFailed", $"Account locked for {model.Email}.", startTime);
             return Unauthorized(new { message = "Account is locked." });
         }
 
         if (!result.Succeeded)
         {
+            await auditLogService.LogActionAsync(user.Id, "LoginFailed", $"Failed login attempt for {model.Email}.", startTime);
             return Unauthorized(new { message = "Username or password is incorrect." });
+        }
+
+        string accessToken = await tokenService.GenerateShortLivedAccessToken(user);
+        tokenService.IssueShortLivedAccessToken(accessToken);
+
+        string? refreshToken = null;
+
+        if (model.RememberMe)
+        {
+            refreshToken = await tokenService.GenerateLongLivedRefreshToken(user);
+            tokenService.IssueLongLivedRefreshToken(refreshToken);
         }
         
         await auditLogService.LogActionAsync(user.Id, "Login", $"User {model.Email} logged in.", startTime);
         await notificationService.SendNotificationAsync(user.Id.ToString(), "Login", "You have successfully logged in.", HttpContext);
-
-        if (model.RememberMe)
-        {
-            string refreshToken = await tokenService.GenerateLongLivedRefreshToken(user);
-            tokenService.IssueLongLivedRefreshToken(refreshToken);
-
-            return Ok(new
-            {
-                message = "Login successful.",
-                RefreshToken = refreshToken,
-                User = new
-                {
-                    user.Id,
-                    user.Email,
-                    user.UserName,
-                    user.FirstName,
-                    user.LastName,
-                    user.CreatedAt,
-                    user.IsAdmin,
-                    Roles = await userManager.GetRolesAsync(user)
-                }
-            });
-        }
         
-        string accessToken = await tokenService.GenerateShortLivedAccessToken(user);
-        tokenService.IssueShortLivedAccessToken(accessToken);
-
         return Ok(new
         {
             message = "Login successful.",
-            AccessToken = accessToken,
-            User = new
+            accessToken, 
+            refreshToken,
+            user = new
             {
                 user.Id,
                 user.Email,

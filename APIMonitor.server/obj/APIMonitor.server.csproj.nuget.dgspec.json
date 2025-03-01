@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/APIMonitor.server.csproj": {}
+    "C:\\Users\\hrist\\WebstormProjects\\APIMonitor\\APIMonitor.server\\APIMonitor.server.csproj": {}
   },
   "projects": {
-    "/home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/APIMonitor.server.csproj": {
+    "C:\\Users\\hrist\\WebstormProjects\\APIMonitor\\APIMonitor.server\\APIMonitor.server.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/APIMonitor.server.csproj",
+        "projectUniqueName": "C:\\Users\\hrist\\WebstormProjects\\APIMonitor\\APIMonitor.server\\APIMonitor.server.csproj",
         "projectName": "APIMonitor.server",
-        "projectPath": "/home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/APIMonitor.server.csproj",
-        "packagesPath": "/home/lyuboslav/.nuget/packages/",
-        "outputPath": "/home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/obj/",
+        "projectPath": "C:\\Users\\hrist\\WebstormProjects\\APIMonitor\\APIMonitor.server\\APIMonitor.server.csproj",
+        "packagesPath": "C:\\Users\\hrist\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\hrist\\WebstormProjects\\APIMonitor\\APIMonitor.server\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/lyuboslav/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\hrist\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
@@ -38,7 +38,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.100"
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net9.0": {
@@ -256,12 +256,6 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
-          "downloadDependencies": [
-            {
-              "name": "Microsoft.AspNetCore.App.Ref",
-              "version": "[9.0.1, 9.0.1]"
-            }
-          ],
           "frameworkReferences": {
             "Microsoft.AspNetCore.App": {
               "privateAssets": "none"
@@ -270,7 +264,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.102/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.200/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
