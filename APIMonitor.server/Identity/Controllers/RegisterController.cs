@@ -77,7 +77,7 @@ public class RegisterController : ControllerBase
             
             await userManager.AddToRoleAsync(newUser, defaultRole);
         }
-
+        
         string token = model.RememberMe
             ? await tokenService.GenerateLongLivedRefreshToken(newUser)
             : await tokenService.GenerateShortLivedAccessToken(newUser);

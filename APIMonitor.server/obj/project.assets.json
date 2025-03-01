@@ -2855,6 +2855,18 @@
           "lib/net8.0/Otp.NET.dll": {}
         }
       },
+      "PacketDotNet/1.4.7": {
+        "type": "package",
+        "dependencies": {
+          "System.Runtime.CompilerServices.Unsafe": "6.0.0"
+        },
+        "compile": {
+          "lib/netstandard2.1/PacketDotNet.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard2.1/PacketDotNet.dll": {}
+        }
+      },
       "Polly/8.5.2": {
         "type": "package",
         "dependencies": {
@@ -3136,6 +3148,31 @@
           "lib/net6.0/Serilog.Sinks.Seq.dll": {
             "related": ".xml"
           }
+        }
+      },
+      "SharpPcap/6.3.0": {
+        "type": "package",
+        "dependencies": {
+          "PacketDotNet": "1.4.7",
+          "System.Memory": "4.5.5",
+          "System.Text.Encoding.CodePages": "6.0.0"
+        },
+        "compile": {
+          "lib/netstandard2.0/SharpPcap.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard2.0/SharpPcap.dll": {}
+        }
+      },
+      "Sharp_Pcap/4.2.0": {
+        "type": "package",
+        "compile": {
+          "lib/PacketDotNet.dll": {},
+          "lib/SharpPcap.dll": {}
+        },
+        "runtime": {
+          "lib/PacketDotNet.dll": {},
+          "lib/SharpPcap.dll": {}
         }
       },
       "Swashbuckle.AspNetCore/7.2.0": {
@@ -3640,7 +3677,7 @@
           "buildTransitive/net8.0/_._": {}
         }
       },
-      "System.Memory/4.5.4": {
+      "System.Memory/4.5.5": {
         "type": "package",
         "compile": {
           "ref/netcoreapp2.1/_._": {}
@@ -3971,6 +4008,31 @@
         "compile": {
           "ref/netstandard1.3/_._": {
             "related": ".xml"
+          }
+        }
+      },
+      "System.Text.Encoding.CodePages/6.0.0": {
+        "type": "package",
+        "dependencies": {
+          "System.Runtime.CompilerServices.Unsafe": "6.0.0"
+        },
+        "compile": {
+          "lib/net6.0/System.Text.Encoding.CodePages.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/System.Text.Encoding.CodePages.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/netcoreapp3.1/_._": {}
+        },
+        "runtimeTargets": {
+          "runtimes/win/lib/net6.0/System.Text.Encoding.CodePages.dll": {
+            "assetType": "runtime",
+            "rid": "win"
           }
         }
       },
@@ -8121,6 +8183,20 @@
         "otp.net.nuspec"
       ]
     },
+    "PacketDotNet/1.4.7": {
+      "sha512": "xh4MGjkDFhJfFtAr6IEwg3ocPm3TO0/AxbYeCVoh9BaVT0xeWJB1p0nwKQ9olsQiQtSqF8M0UXz97U2VnOYY0w==",
+      "type": "package",
+      "path": "packetdotnet/1.4.7",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net47/PacketDotNet.dll",
+        "lib/netstandard2.0/PacketDotNet.dll",
+        "lib/netstandard2.1/PacketDotNet.dll",
+        "packetdotnet.1.4.7.nupkg.sha512",
+        "packetdotnet.nuspec"
+      ]
+    },
     "Polly/8.5.2": {
       "sha512": "vbXsGgkG86nG+TOwY+SmtrGrRHmHH0DQaxtILx//d3Dz/ocJ8izSNYzdvU2gEtWa/LDD8zJLvD3HdjEkdlvkhg==",
       "type": "package",
@@ -8509,6 +8585,34 @@
         "lib/netstandard2.0/Serilog.Sinks.Seq.xml",
         "serilog.sinks.seq.9.0.0.nupkg.sha512",
         "serilog.sinks.seq.nuspec"
+      ]
+    },
+    "SharpPcap/6.3.0": {
+      "sha512": "9tFnPgVYWJj/6fQRFLV34n0Uh9SLwi2zkQ/dPaxx8ZoNuPm1XuJU731qWMsMJlwQD6FL0AFeQpRj7zXLV8iu1Q==",
+      "type": "package",
+      "path": "sharppcap/6.3.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/netstandard2.0/SharpPcap.dll",
+        "sharppcap.6.3.0.nupkg.sha512",
+        "sharppcap.nuspec"
+      ]
+    },
+    "Sharp_Pcap/4.2.0": {
+      "sha512": "TXQpXJPIgaPUohaNLgigt98FNG2pskOFH+bWhCOQdJzif3W9OzJ8quEGYZal540zmmLJ+Xiusf4bcHZLQmoiaQ==",
+      "type": "package",
+      "path": "sharp_pcap/4.2.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/PacketDotNet.dll",
+        "lib/PacketDotNet.xml",
+        "lib/SharpPcap.dll",
+        "lib/SharpPcap.dll.config",
+        "lib/SharpPcap.xml",
+        "sharp_pcap.4.2.0.nupkg.sha512",
+        "sharp_pcap.nuspec"
       ]
     },
     "Swashbuckle.AspNetCore/7.2.0": {
@@ -9424,10 +9528,10 @@
         "useSharedDesignerContext.txt"
       ]
     },
-    "System.Memory/4.5.4": {
-      "sha512": "1MbJTHS1lZ4bS4FmsJjnuGJOu88ZzTT2rLvrhW7Ygic+pC0NWA+3hgAen0HRdsocuQXCkUTdFn9yHJJhsijDXw==",
+    "System.Memory/4.5.5": {
+      "sha512": "XIWiDvKPXaTveaB7HVganDlOCRoj03l+jrwNvcge/t8vhGYKvqV+dMv6G4SAX2NoNmN0wZfVPTAlFwZcZvVOUw==",
       "type": "package",
-      "path": "system.memory/4.5.4",
+      "path": "system.memory/4.5.5",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -9441,7 +9545,7 @@
         "lib/netstandard2.0/System.Memory.dll",
         "lib/netstandard2.0/System.Memory.xml",
         "ref/netcoreapp2.1/_._",
-        "system.memory.4.5.4.nupkg.sha512",
+        "system.memory.4.5.5.nupkg.sha512",
         "system.memory.nuspec",
         "useSharedDesignerContext.txt",
         "version.txt"
@@ -10446,6 +10550,45 @@
         "system.text.encoding.nuspec"
       ]
     },
+    "System.Text.Encoding.CodePages/6.0.0": {
+      "sha512": "ZFCILZuOvtKPauZ/j/swhvw68ZRi9ATCfvGbk1QfydmcXBkIWecWKn/250UH7rahZ5OoDBaiAudJtPvLwzw85A==",
+      "type": "package",
+      "path": "system.text.encoding.codepages/6.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "THIRD-PARTY-NOTICES.TXT",
+        "buildTransitive/netcoreapp2.0/System.Text.Encoding.CodePages.targets",
+        "buildTransitive/netcoreapp3.1/_._",
+        "lib/MonoAndroid10/_._",
+        "lib/MonoTouch10/_._",
+        "lib/net461/System.Text.Encoding.CodePages.dll",
+        "lib/net461/System.Text.Encoding.CodePages.xml",
+        "lib/net6.0/System.Text.Encoding.CodePages.dll",
+        "lib/net6.0/System.Text.Encoding.CodePages.xml",
+        "lib/netcoreapp3.1/System.Text.Encoding.CodePages.dll",
+        "lib/netcoreapp3.1/System.Text.Encoding.CodePages.xml",
+        "lib/netstandard2.0/System.Text.Encoding.CodePages.dll",
+        "lib/netstandard2.0/System.Text.Encoding.CodePages.xml",
+        "lib/xamarinios10/_._",
+        "lib/xamarinmac20/_._",
+        "lib/xamarintvos10/_._",
+        "lib/xamarinwatchos10/_._",
+        "runtimes/win/lib/net461/System.Text.Encoding.CodePages.dll",
+        "runtimes/win/lib/net461/System.Text.Encoding.CodePages.xml",
+        "runtimes/win/lib/net6.0/System.Text.Encoding.CodePages.dll",
+        "runtimes/win/lib/net6.0/System.Text.Encoding.CodePages.xml",
+        "runtimes/win/lib/netcoreapp3.1/System.Text.Encoding.CodePages.dll",
+        "runtimes/win/lib/netcoreapp3.1/System.Text.Encoding.CodePages.xml",
+        "runtimes/win/lib/netstandard2.0/System.Text.Encoding.CodePages.dll",
+        "runtimes/win/lib/netstandard2.0/System.Text.Encoding.CodePages.xml",
+        "system.text.encoding.codepages.6.0.0.nupkg.sha512",
+        "system.text.encoding.codepages.nuspec",
+        "useSharedDesignerContext.txt"
+      ]
+    },
     "System.Text.Encodings.Web/8.0.0": {
       "sha512": "yev/k9GHAEGx2Rg3/tU6MQh4HGBXJs70y7j1LaM1i/ER9po+6nnQ6RRqTJn1E7Xu0fbIFK80Nh5EoODxrbxwBQ==",
       "type": "package",
@@ -10856,6 +10999,8 @@
       "Serilog.Sinks.File >= 6.0.0",
       "Serilog.Sinks.MSSqlServer >= 8.1.1-dev-00122",
       "Serilog.Sinks.Seq >= 9.0.0",
+      "SharpPcap >= 6.3.0",
+      "Sharp_Pcap >= 4.2.0",
       "Swashbuckle.AspNetCore >= 7.2.0",
       "Twilio >= 7.8.4"
     ]
@@ -11087,6 +11232,14 @@
             "target": "Package",
             "version": "[9.0.0, )"
           },
+          "SharpPcap": {
+            "target": "Package",
+            "version": "[6.3.0, )"
+          },
+          "Sharp_Pcap": {
+            "target": "Package",
+            "version": "[4.2.0, )"
+          },
           "Swashbuckle.AspNetCore": {
             "target": "Package",
             "version": "[7.2.0, )"
@@ -11124,5 +11277,17 @@
         "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.102/PortableRuntimeIdentifierGraph.json"
       }
     }
-  }
+  },
+  "logs": [
+    {
+      "code": "NU1701",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Package 'Sharp_Pcap 4.2.0' was restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' instead of the project target framework 'net9.0'. This package may not be fully compatible with your project.",
+      "libraryId": "Sharp_Pcap",
+      "targetGraphs": [
+        "net9.0"
+      ]
+    }
+  ]
 }

@@ -228,6 +228,14 @@
               "target": "Package",
               "version": "[9.0.0, )"
             },
+            "SharpPcap": {
+              "target": "Package",
+              "version": "[6.3.0, )"
+            },
+            "Sharp_Pcap": {
+              "target": "Package",
+              "version": "[4.2.0, )"
+            },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
               "version": "[7.2.0, )"

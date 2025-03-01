@@ -263,6 +263,7 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
     .WriteTo.Console()
+    .WriteTo.File("logs/log.txt", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 
 builder.Host.UseSerilog();
@@ -273,7 +274,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlSer
 
 builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
 {
-    options.SignIn.RequireConfirmedAccount = true;
+    options.SignIn.RequireConfirmedAccount = false;
     options.User.RequireUniqueEmail = true;
     options.Password.RequireDigit = true;
     options.Password.RequireLowercase = true;
@@ -325,6 +326,15 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddHostedService<ApiScannerBackgroundService>();
 
+// builder.Services.AddHttpClient<IApiScannerService, ApiScannerService>()
+//     .AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(5)))
+//     .AddPolicyHandler(Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
+//         .RetryAsync(3))
+//     .AddPolicyHandler(Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
+//         .CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
+//
+// builder.Services.AddSingleton<ApiScannerService>();
+
 builder.Services.AddHttpClient<IApiScannerService, ApiScannerService>()
     .AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(5)))
     .AddPolicyHandler(Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
@@ -332,7 +342,13 @@ builder.Services.AddHttpClient<IApiScannerService, ApiScannerService>()
     .AddPolicyHandler(Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
         .CircuitBreakerAsync(5, TimeSpan.FromSeconds(10)));
 
+builder.Services.AddHostedService<ApiScannerBackgroundService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IApiScannerService, ApiScannerService>();
+
 builder.Services.AddDataProtection();
+
 // builder.Services.AddHttpClient<IGeoLocationService, ApiGeoLocationService>();
 // builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 // builder.Services.AddScoped<IGeoLocationService, ApiGeoLocationService>();
@@ -340,11 +356,8 @@ builder.Services.AddDataProtection();
 // builder.Services.AddScoped<IMacAddressService, MacAddressService>();
 // builder.Services.AddScoped<INotificationService, NotificationService>();
 // builder.Services.AddScoped<IRateLimitService, RateLimitService>();
-builder.Services.AddScoped<IRoleService, RoleService>();
 // builder.Services.AddScoped<RoleManager<IdentityRole<int>>>();
-builder.Services.AddScoped<ITokenService, TokenService>();
 // builder.Services.AddScoped<IThreatDetectionService, ThreatDetectionService>();
-
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -392,7 +405,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseRouting();
 
-app.UseCors("AllowAll");
+app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();

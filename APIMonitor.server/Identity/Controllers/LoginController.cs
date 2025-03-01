@@ -40,11 +40,16 @@ public class LoginController : ControllerBase
         
         SignInResult result = await signInManager.PasswordSignInAsync(user, model.Password, model.RememberMe, true);
 
+        if (result.IsLockedOut)
+        {
+            return Unauthorized(new { message = "Account is locked." });
+        }
+
         if (!result.Succeeded)
         {
             return Unauthorized(new { message = "Username or password is incorrect." });
         }
-        
+
         if (model.RememberMe)
         {
             string refreshToken = await tokenService.GenerateLongLivedRefreshToken(user);
@@ -53,7 +58,6 @@ public class LoginController : ControllerBase
             return Ok(new
             {
                 message = "Login successful.",
-                AccessToken = string.Empty, 
                 RefreshToken = refreshToken
             });
         }
@@ -65,7 +69,6 @@ public class LoginController : ControllerBase
         {
             message = "Login successful.",
             AccessToken = accessToken,
-            RefreshToken = string.Empty
         });
     }
 

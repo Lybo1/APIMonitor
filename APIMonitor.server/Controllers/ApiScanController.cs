@@ -9,7 +9,7 @@ namespace APIMonitor.server.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class ApiScanController : ControllerBase
+public class ApiScanController : ControllerBase 
 {
     private readonly IApiScannerService apiScannerService;
     private readonly IHubContext<NotificationHub> hubContext;

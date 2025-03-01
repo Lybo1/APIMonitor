@@ -55,6 +55,8 @@
         <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
         <PackageReference Include="Serilog.Sinks.MSSqlServer" Version="8.1.1-dev-00122" />
         <PackageReference Include="Serilog.Sinks.Seq" Version="9.0.0" />
+        <PackageReference Include="SharpPcap" Version="6.3.0" />
+        <PackageReference Include="Sharp_Pcap" Version="4.2.0" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
         <PackageReference Include="Twilio" Version="7.8.4" />
     </ItemGroup>
