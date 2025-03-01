@@ -53,8 +53,7 @@ public class RefreshTokenController : ControllerBase
             TokenResponse newToken = await tokenService.RefreshTokenAsync(refreshToken);
             
             memoryCache.Set($"used_refresh_{refreshTokenHash}", true, TimeSpan.FromDays(7));
-            memoryCache.Set($"refresh_meta_{refreshTokenHash}", new { IP = ipAddress, UserAgent = userAgent },
-                TimeSpan.FromDays(7));
+            memoryCache.Set($"refresh_meta_{refreshTokenHash}", new { IP = ipAddress, UserAgent = userAgent }, TimeSpan.FromDays(7));
 
             return Ok(newToken);
         }
@@ -68,5 +67,26 @@ public class RefreshTokenController : ControllerBase
         {
             return StatusCode(500, new { message = "An unexpected error occurred.", error = ex.Message });
         }
+    }
+
+    [Authorize]
+    [HttpPost("verify")]
+    public async Task<IActionResult> VerifyToken()
+    {
+        string token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+        
+        if (string.IsNullOrEmpty(token))
+        {
+            return BadRequest(new { message = "No token provided" });
+        }
+
+        bool isValid = await tokenService.ValidateTokenAsync(token);
+        
+        if (!isValid)
+        {
+            return Unauthorized(new { message = "Invalid or expired token" });
+        }
+
+        return Ok(new { message = "Token is valid" });
     }
 }

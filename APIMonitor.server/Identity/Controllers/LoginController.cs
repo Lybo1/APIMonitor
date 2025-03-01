@@ -58,7 +58,18 @@ public class LoginController : ControllerBase
             return Ok(new
             {
                 message = "Login successful.",
-                RefreshToken = refreshToken
+                RefreshToken = refreshToken,
+                User = new
+                {
+                    user.Id,
+                    user.Email,
+                    user.UserName,
+                    user.FirstName,
+                    user.LastName,
+                    user.CreatedAt,
+                    user.IsAdmin,
+                    Roles = await userManager.GetRolesAsync(user)
+                }
             });
         }
         
@@ -69,6 +80,17 @@ public class LoginController : ControllerBase
         {
             message = "Login successful.",
             AccessToken = accessToken,
+            User = new
+            {
+                user.Id,
+                user.Email,
+                user.UserName,
+                user.FirstName,
+                user.LastName,
+                user.CreatedAt,
+                user.IsAdmin,
+                Roles = await userManager.GetRolesAsync(user)
+            }
         });
     }
 
