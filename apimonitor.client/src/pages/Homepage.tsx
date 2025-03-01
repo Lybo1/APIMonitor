@@ -3,12 +3,13 @@ import { useAuth } from '../context/AuthContext.tsx';
 import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
 import { useQuery } from 'react-query';
 import { motion } from 'framer-motion';
-import { BellIcon, ShieldExclamationIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/solid';
+import { BellIcon, ShieldExclamationIcon, QuestionMarkCircleIcon, UserIcon } from '@heroicons/react/24/solid';
+import { useNavigate } from 'react-router-dom';
 
 interface MetricSummary {
     totalRequests: number;
-    averageResponseTime: number;
-    errorsCount: number;
+    averageResponseTimeMs: number;
+    totalErrors: number;
 }
 
 interface ThreatLog {
@@ -38,6 +39,7 @@ const fetchThreats = async () => {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
     });
+    if (response.status === 404) return [];
     if (!response.ok) throw new Error(`Failed to fetch threats: ${response.status}`);
     return response.json();
 };
@@ -53,18 +55,19 @@ const fetchNotifications = async () => {
 
 const Homepage: React.FC = () => {
     const { user, token, logout } = useAuth();
+    const navigate = useNavigate();
     const [cliOutput, setCliOutput] = useState<string[]>([`[${new Date().toISOString()}] Welcome to API Monitor CLI`]);
     const [command, setCommand] = useState('');
     const [connection, setConnection] = useState<any>(null);
     const [isScanning, setIsScanning] = useState(false);
     const cliRef = useRef<HTMLDivElement>(null);
 
-    const { data: metrics, isLoading: metricsLoading, error: metricsError } = useQuery(
+    const { data: metrics, isLoading: metricsLoading, error: metricsError, refetch: refetchMetrics } = useQuery(
         'metrics',
         fetchMetrics,
         { enabled: !!token, retry: false }
     );
-    const { data: threats, isLoading: threatsLoading, error: threatsError } = useQuery(
+    const { data: threats, isLoading: threatsLoading, error: threatsError, refetch: refetchThreats } = useQuery(
         'threats',
         fetchThreats,
         { enabled: !!token, retry: false }
@@ -85,6 +88,7 @@ const Homepage: React.FC = () => {
     useEffect(() => {
         if (!token || !user) {
             setCliOutput(prev => [...prev, `[${new Date().toISOString()}] Waiting for authentication...`]);
+            navigate('/login');
             return;
         }
 
@@ -106,12 +110,10 @@ const Homepage: React.FC = () => {
                 setConnection(newConnection);
                 setCliOutput(prev => [...prev, `[${new Date().toISOString()}] Connected to real-time updates`]);
             })
-            .catch(err => setCliOutput(prev => [...prev, `[${new Date().toISOString()}] SignalR Error: ${err}`]));
+            .catch((err: Error) => setCliOutput(prev => [...prev, `[${new Date().toISOString()}] SignalR Error: ${err.message}`]));
 
-        return () => {
-            newConnection.stop();
-        };
-    }, [token, user]);
+        return () => newConnection.stop();
+    }, [token, user, navigate]);
 
     useEffect(() => {
         if (cliRef.current) cliRef.current.scrollTop = cliRef.current.scrollHeight;
@@ -121,36 +123,71 @@ const Homepage: React.FC = () => {
         if (metrics && !metricsLoading) {
             setCliOutput(prev => [
                 ...prev,
-                `[${new Date().toISOString()}] Metrics - Requests: ${metrics.totalRequests}, Avg Time: ${metrics.averageResponseTime.toFixed(2)}ms, Errors: ${metrics.errorsCount}`
+                `[${new Date().toISOString()}] Metrics - Requests: ${metrics.totalRequests}, Avg Time: ${metrics.averageResponseTimeMs?.toFixed(2) ?? 'N/A'}ms, Errors: ${metrics.totalErrors}`
             ]);
         }
-        if (metricsError) {
-            setCliOutput(prev => [...prev, `[${new Date().toISOString()}] Error: ${metricsError.message}`]);
+        if (metricsError) setCliOutput(prev => [...prev, `[${new Date().toISOString()}] Error: ${(metricsError as Error).message}`]);
+        if (threats && !threatsLoading && threats.length === 0) {
+            setCliOutput(prev => [...prev, `[${new Date().toISOString()}] No recent threats`]);
         }
-        if (threatsError) {
-            setCliOutput(prev => [...prev, `[${new Date().toISOString()}] Error: ${threatsError.message}`]);
-        }
-        if (notifsError) {
-            setCliOutput(prev => [...prev, `[${new Date().toISOString()}] Error: ${notifsError.message}`]);
-        }
-    }, [metrics, metricsLoading, metricsError, threatsError, notifsError]);
+        if (threatsError) setCliOutput(prev => [...prev, `[${new Date().toISOString()}] Error: ${(threatsError as Error).message}`]);
+        if (notifsError) setCliOutput(prev => [...prev, `[${new Date().toISOString()}] Error: ${(notifsError as Error).message}`]);
+    }, [metrics, metricsLoading, metricsError, threats, threatsLoading, threatsError, notifsError]);
 
-    const handleCommand = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!command.trim()) {
-            setCliOutput(prev => [...prev, `[${new Date().toISOString()}] Error: Enter a command`]);
-            return;
-        }
-
-        setCliOutput(prev => [...prev, `> ${command}`]);
-        const [cmd, ...args] = command.trim().split(' ');
-
-        if (!token) {
-            setCliOutput(prev => [...prev, `[${new Date().toISOString()}] Error: No access token available`]);
-            return;
-        }
-
-        if (cmd.toLowerCase() === 'scan' && !isScanning) {
+    const commands: { [key: string]: (args: string[]) => Promise<void> | void } = {
+        clear: () => setCliOutput([]),
+        help: () => {
+            const helpText = [
+                `[${new Date().toISOString()}] Available Commands:`,
+                '  clear - Clears the CLI output',
+                '  help - Shows this help message',
+                '  whoami - Displays current user details',
+                '  logout - Logs out the current user',
+                '  metrics - Fetches and displays API metrics',
+                '  threats - Fetches and displays threat logs',
+                '  scan - Initiates a full API scan',
+                '  scan-single <url> [key] - Scans a single API URL with optional API key',
+            ];
+            setCliOutput(prev => [...prev, ...helpText]);
+        },
+        whoami: () => {
+            if (!user) {
+                setCliOutput(prev => [...prev, `[${new Date().toISOString()}] Error: Not logged in`]);
+                return;
+            }
+            setCliOutput(prev => [
+                ...prev,
+                `[${new Date().toISOString()}] User: ${user.username} (ID: ${user.id}, Email: ${user.email}, Roles: ${user.roles.join(', ')})`
+            ]);
+        },
+        logout: () => logout(),
+        metrics: async () => {
+            await refetchMetrics();
+            if (metrics) {
+                setCliOutput(prev => [
+                    ...prev,
+                    `[${new Date().toISOString()}] Metrics - Requests: ${metrics.totalRequests}, Avg Time: ${metrics.averageResponseTimeMs?.toFixed(2) ?? 'N/A'}ms, Errors: ${metrics.totalErrors}`
+                ]);
+            }
+        },
+        threats: async () => {
+            await refetchThreats();
+            if (threats) {
+                if (threats.length === 0) {
+                    setCliOutput(prev => [...prev, `[${new Date().toISOString()}] No recent threats`]);
+                } else {
+                    const threatLines = threats.slice(0, 5).map((t: ThreatLog) =>
+                        `[${new Date().toISOString()}] Threat: ${t.timestamp} - ${t.threatType} (${t.ipAddress})`
+                    );
+                    setCliOutput(prev => [...prev, ...threatLines]);
+                }
+            }
+        },
+        scan: async () => {
+            if (isScanning) {
+                setCliOutput(prev => [...prev, `[${new Date().toISOString()}] Scan already in progress`]);
+                return;
+            }
             setIsScanning(true);
             try {
                 const response = await fetch('http://localhost:5028/api/ApiScan/scan', {
@@ -164,33 +201,64 @@ const Homepage: React.FC = () => {
                 if (!response.ok) throw new Error(await response.text() || 'Unknown error');
                 setCliOutput(prev => [...prev, `[${new Date().toISOString()}] Full scan initiated...`]);
             } catch (error) {
-                setCliOutput(prev => [...prev, `[${new Date().toISOString()}] Scan Error: ${error.message}`]);
+                setCliOutput(prev => [...prev, `[${new Date().toISOString()}] Scan Error: ${(error as Error).message}`]);
                 setIsScanning(false);
             }
-        } else if (cmd.toLowerCase() === 'scan-single' && args.length > 0 && !isScanning) {
+        },
+        'scan-single': async (args: string[]) => {
+            if (isScanning) {
+                setCliOutput(prev => [...prev, `[${new Date().toISOString()}] Scan already in progress`]);
+                return;
+            }
+            if (args.length === 0) {
+                setCliOutput(prev => [...prev, `[${new Date().toISOString()}] Error: URL required for scan-single`]);
+                return;
+            }
             setIsScanning(true);
-            const apiUrl = args.join(' ');
+            const apiUrl = args[0];
+            const apiKey = args.length > 1 ? args[1] : null;
             try {
-                const response = await fetch(`http://localhost:5028/api/ApiScan/scan-single?apiUrl=${encodeURIComponent(apiUrl)}`, {
+                const url = new URL(`http://localhost:5028/api/ApiScan/scan-single?apiUrl=${encodeURIComponent(apiUrl)}${apiKey ? `&apiKey=${encodeURIComponent(apiKey)}` : ''}`);
+                const response = await fetch(url, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
                 });
                 if (!response.ok) throw new Error(await response.text() || 'Unknown error');
                 const result = await response.json();
                 setCliOutput(prev => [
                     ...prev,
-                    `[${new Date().toISOString()}] Scanned ${apiUrl} - Requests: ${result.totalRequests}, Time: ${result.averageResponseTime.toFixed(2)}ms, Errors: ${result.errorsCount}`
+                    `[${new Date().toISOString()}] Scan result - URL: ${apiUrl}, Status: ${result.statusCode}, Headers: ${result.headersResponseTime.toFixed(2)}ms, Total: ${result.totalResponseTime.toFixed(2)}ms, Errors: ${result.errorsCount}`,
+                    `[${new Date().toISOString()}] Response Body:`,
+                    result.responseBody
                 ]);
                 setIsScanning(false);
             } catch (error) {
-                setCliOutput(prev => [...prev, `[${new Date().toISOString()}] Single Scan Error: ${error.message}`]);
+                setCliOutput(prev => [...prev, `[${new Date().toISOString()}] Single Scan Error: ${(error as Error).message}`]);
                 setIsScanning(false);
             }
-        } else if (isScanning) {
-            setCliOutput(prev => [...prev, `[${new Date().toISOString()}] Scan already in progress`]);
+        },
+    };
+
+    const handleCommand = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!command.trim()) {
+            setCliOutput(prev => [...prev, `[${new Date().toISOString()}] Error: Enter a command`]);
+            return;
+        }
+
+        setCliOutput(prev => [...prev, `> ${command}`]);
+        const parts = command.trim().toLowerCase().split(' ');
+        const cmd = parts[0];
+        const args = parts.slice(1);
+
+        if (!token && cmd !== 'help') {
+            setCliOutput(prev => [...prev, `[${new Date().toISOString()}] Error: Not logged in`]);
+            return;
+        }
+
+        if (commands[cmd]) {
+            await commands[cmd](args);
         } else {
             setCliOutput(prev => [...prev, `[${new Date().toISOString()}] Command not recognized`]);
         }
@@ -201,15 +269,13 @@ const Homepage: React.FC = () => {
         try {
             await fetch('http://localhost:5028/api/Notification/mark-as-read', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id }),
                 credentials: 'include',
             });
             refetchNotifications();
         } catch (error) {
-            setCliOutput(prev => [...prev, `[${new Date().toISOString()}] Error marking notification: ${error.message}`]);
+            setCliOutput(prev => [...prev, `[${new Date().toISOString()}] Error marking notification: ${(error as Error).message}`]);
         }
     };
 
@@ -224,8 +290,8 @@ const Homepage: React.FC = () => {
                         <BellIcon className="w-6 h-6 cursor-pointer" />
                         {notifications?.filter(n => !n.isRead).length > 0 && (
                             <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">
-                {notifications.filter(n => !n.isRead).length}
-              </span>
+                                {notifications.filter(n => !n.isRead).length}
+                            </span>
                         )}
                         <motion.div
                             className="absolute right-0 mt-2 w-64 bg-gray-700 rounded shadow-lg hidden group-hover:block"
@@ -250,8 +316,8 @@ const Homepage: React.FC = () => {
                         <ShieldExclamationIcon className="w-6 h-6 cursor-pointer" />
                         {threats?.length > 0 && (
                             <span className="absolute -top-1 -right-1 bg-yellow-500 text-black rounded-full w-4 h-4 text-xs flex items-center justify-center">
-                {threats.length}
-              </span>
+                                {threats.length}
+                            </span>
                         )}
                         <motion.div
                             className="absolute right-0 mt-2 w-64 bg-gray-700 rounded shadow-lg hidden group-hover:block"
@@ -259,7 +325,7 @@ const Homepage: React.FC = () => {
                             animate={{ opacity: 1 }}
                         >
                             {threats?.length > 0 ? (
-                                threats.slice(0, 5).map(t => (
+                                threats.slice(0, 5).map((t: ThreatLog) => (
                                     <div key={t.id} className="p-2">
                                         {t.timestamp} - {t.threatType} ({t.ipAddress})
                                     </div>
@@ -270,6 +336,10 @@ const Homepage: React.FC = () => {
                         </motion.div>
                     </div>
                     <span>Welcome, {user?.username || 'Guest'}</span>
+                    <UserIcon
+                        className="w-6 h-6 cursor-pointer"
+                        onClick={() => navigate('/account')}
+                    />
                     <button onClick={logout} className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600">Logout</button>
                 </div>
             </nav>
@@ -289,29 +359,34 @@ const Homepage: React.FC = () => {
                         value={command}
                         onChange={e => setCommand(e.target.value)}
                         className="flex-1 bg-gray-800 text-green-400 p-2 rounded-l outline-none"
-                        placeholder="Type 'scan' or 'scan-single <url>'..."
+                        placeholder="Type 'help' for commands..."
                         disabled={isScanning}
                     />
                     <button
                         type="submit"
-                        className="bg-blue-500 text-white px-4 py-2 rounded-r hover:bg-blue-600 disabled:bg-gray-500"
+                        className="bg-blue-500 text-white px-4 py-2 rounded-r hover:bg-blue-600 disabled:bg-gray-500 ml-2"
                         disabled={isScanning}
                     >
                         Submit
                     </button>
-                    <div className="relative group ml-2">
+                    <div className="relative group ml-4">
                         <QuestionMarkCircleIcon className="w-6 h-6 cursor-pointer" />
                         <motion.div
-                            className="absolute -right-2 -top-24 w-64 bg-gray-700 rounded shadow-lg hidden group-hover:block z-20"
+                            className="absolute -left-48 -top-32 w-64 bg-gray-700 rounded shadow-lg hidden group-hover:block z-20"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                         >
                             <p className="text-sm p-2">Commands:</p>
                             <ul className="text-sm list-disc pl-6 pb-2">
-                                <li><code>scan</code>: Scans all active APIs</li>
-                                <li><code>scan-single &lt;url&gt</code>: Scans one API (e.g., "scan-single https://api.example.com")</li>
+                                <li><code>help</code>: List all commands</li>
+                                <li><code>whoami</code>: Show user info</li>
+                                <li><code>logout</code>: Log out</li>
+                                <li><code>metrics</code>: Show API metrics</li>
+                                <li><code>threats</code>: Show threat logs</li>
+                                <li><code>scan</code>: Full API scan</li>
+                                <li><code>scan-single  [key]</code>: Scan one API</li>
+                                <li><code>clear</code>: Clear CLI</li>
                             </ul>
-                            <p className="text-sm p-2">Type the full command and press Enter or click Submit.</p>
                         </motion.div>
                     </div>
                 </form>

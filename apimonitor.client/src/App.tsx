@@ -6,6 +6,7 @@ import { AuthProvider } from "./context/AuthContext.tsx";
 import ProtectedRoute from "./ProtectedRoute.tsx";
 import { QueryClientProvider, QueryClient } from "react-query";
 import { ReactQueryDevtools } from "react-query/devtools";
+import UserAccount from "./pages/UserPage";
 
 const queryClient = new QueryClient();
 
@@ -18,8 +19,13 @@ const App = () => {
                         <Route path="/" element={<Navigate to="/register" />} />
                         <Route path="/register" element={<RegisterPage />} />
                         <Route path="/login" element={<LoginPage />} />
+
                         <Route element={<ProtectedRoute />}>
                             <Route path="/homepage" element={<Homepage />} />
+                        </Route>
+
+                        <Route element={<ProtectedRoute />}>
+                            <Route path='"account' element={<UserAccount />} />
                         </Route>
                     </Routes>
                 </AuthProvider>
