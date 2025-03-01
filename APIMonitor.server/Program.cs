@@ -247,6 +247,7 @@ using APIMonitor.server.Services.ApiScannerService;
 using APIMonitor.server.Services.ThreatDetectionService;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using APIMonitor.server.Hubs;
 using APIMonitor.server.Identity.Services.RoleServices;
 using APIMonitor.server.Identity.Services.TokenServices;
 using APIMonitor.server.Middleware;
@@ -311,6 +312,7 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 builder.Services.AddMemoryCache();
 
 builder.Services.AddCors(options =>
@@ -349,15 +351,15 @@ builder.Services.AddScoped<IApiScannerService, ApiScannerService>();
 
 builder.Services.AddDataProtection();
 
-// builder.Services.AddHttpClient<IGeoLocationService, ApiGeoLocationService>();
-// builder.Services.AddScoped<IAuditLogService, AuditLogService>();
-// builder.Services.AddScoped<IGeoLocationService, ApiGeoLocationService>();
-// builder.Services.AddScoped<IIpBlockService, IpBlockService>();
-// builder.Services.AddScoped<IMacAddressService, MacAddressService>();
-// builder.Services.AddScoped<INotificationService, NotificationService>();
-// builder.Services.AddScoped<IRateLimitService, RateLimitService>();
-// builder.Services.AddScoped<RoleManager<IdentityRole<int>>>();
-// builder.Services.AddScoped<IThreatDetectionService, ThreatDetectionService>();
+builder.Services.AddHttpClient<IGeoLocationService, ApiGeoLocationService>();
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
+builder.Services.AddScoped<IGeoLocationService, ApiGeoLocationService>();
+builder.Services.AddScoped<IIpBlockService, IpBlockService>();
+builder.Services.AddScoped<IMacAddressService, MacAddressService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IRateLimitService, RateLimitService>();
+builder.Services.AddScoped<RoleManager<IdentityRole<int>>>();
+builder.Services.AddScoped<IThreatDetectionService, ThreatDetectionService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -411,5 +413,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<NotificationHub>("/notificationHub");
 
 app.Run();

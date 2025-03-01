@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using APIMonitor.server.Data;
+using APIMonitor.server.Hubs;
 using APIMonitor.server.Models;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Polly;
@@ -16,6 +18,7 @@ public class ApiScannerService : IApiScannerService
     private readonly ApplicationDbContext dbContext;
     private readonly IMemoryCache memoryCache;
     private readonly ILogger<ApiScannerService> logger;
+    private readonly IHubContext<NotificationHub> hubContext;
 
     private static readonly AsyncRetryPolicy<HttpResponseMessage> retryPolicy = Policy
         .HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
@@ -47,12 +50,18 @@ public class ApiScannerService : IApiScannerService
             });
 
     
-    public ApiScannerService(HttpClient httpClient, ApplicationDbContext dbContext, IMemoryCache memoryCache, ILogger<ApiScannerService> logger)
+    public ApiScannerService(
+        HttpClient httpClient,
+        ApplicationDbContext dbContext,
+        IMemoryCache memoryCache,
+        ILogger<ApiScannerService> logger,
+        IHubContext<NotificationHub> hubContext)
     {
         this.httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         this.memoryCache = memoryCache ?? throw new ArgumentNullException(nameof(memoryCache));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
     }
 
     public async Task ScanApisAsync()
@@ -65,25 +74,37 @@ public class ApiScannerService : IApiScannerService
         if (apiUrls.Count == 0)
         {
             logger.LogWarning("⚠️ No active APIs found to scan.");
+            await hubContext.Clients.All.SendAsync("ReceiveNotification", "No active APIs to scan.");
             return;
         }
 
         logger.LogInformation($"🚀 Starting batch scan for {apiUrls.Count} APIs...");
+        await hubContext.Clients.All.SendAsync("ReceiveNotification", $"Starting scan of {apiUrls.Count} APIs...");
+
+        int total = apiUrls.Count;
+        int completed = 0;
 
         List<Task<ApiMetrics>> scanTasks = apiUrls
-            .Where(apiUrl => !memoryCache.TryGetValue(apiUrl, out _)) 
-            .Select(apiUrl => ScanSingleApiAsync(apiUrl))
+            .Where(apiUrl => !memoryCache.TryGetValue(apiUrl, out _))
+            .Select(async apiUrl =>
+            {
+                var metrics = await ScanSingleApiAsync(apiUrl);
+                completed++;
+                await hubContext.Clients.All.SendAsync("ReceiveNotification", $"Scanned {apiUrl} - {completed}/{total} ({(completed * 100 / total)}%)");
+                return metrics;
+            })
             .ToList();
 
         try
         {
             await Task.WhenAll(scanTasks);
-            
             logger.LogInformation($"✅ Batch API scan completed successfully.");
+            await hubContext.Clients.All.SendAsync("ReceiveNotification", "Scan completed successfully.");
         }
         catch (Exception ex)
         {
             logger.LogError($"❌ Error during batch API scan: {ex.Message}");
+            await hubContext.Clients.All.SendAsync("ReceiveNotification", $"Scan failed: {ex.Message}");
         }
     }
 

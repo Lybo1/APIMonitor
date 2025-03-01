@@ -1,4 +1,6 @@
 using APIMonitor.server.Identity.Services.TokenServices;
+using APIMonitor.server.Services.AuditLogService;
+using APIMonitor.server.Services.NotificationsService;
 using APIMonitor.server.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -15,19 +17,26 @@ public class LoginController : ControllerBase
     private readonly UserManager<User> userManager;
     private readonly SignInManager<User> signInManager;
     private readonly ITokenService tokenService;
+    private readonly IAuditLogService auditLogService;
+    private readonly INotificationService notificationService;
 
-    public LoginController(UserManager<User> userManager, SignInManager<User> signInManager, ITokenService tokenService)
+    public LoginController(UserManager<User> userManager, SignInManager<User> signInManager, ITokenService tokenService, IAuditLogService auditLogService, INotificationService notificationService)
     {
         this.userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         this.signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
         this.tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
+        this.auditLogService = auditLogService ?? throw new ArgumentNullException(nameof(auditLogService));
+        this.notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginViewModel model)
     {
+        DateTime startTime = DateTime.UtcNow;
+        
         if (!ModelState.IsValid)
         {
+            await auditLogService.LogActionAsync(0, "LoginFailed", $"Failed login attempt for {model.Email} - User not found.", startTime);
             return BadRequest(new { message = "Invalid login request." });
         }
         
@@ -35,6 +44,7 @@ public class LoginController : ControllerBase
 
         if (user is null)
         {
+            await auditLogService.LogActionAsync(user.Id, "LoginFailed", $"Failed login attempt for {model.Email}.", startTime);
             return Unauthorized(new { message = "Username or password is incorrect." });
         }
         
@@ -49,6 +59,9 @@ public class LoginController : ControllerBase
         {
             return Unauthorized(new { message = "Username or password is incorrect." });
         }
+        
+        await auditLogService.LogActionAsync(user.Id, "Login", $"User {model.Email} logged in.", startTime);
+        await notificationService.SendNotificationAsync(user.Id.ToString(), "Login", "You have successfully logged in.", HttpContext);
 
         if (model.RememberMe)
         {

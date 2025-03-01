@@ -1,13 +1,11 @@
 using APIMonitor.server.Data;
 using APIMonitor.server.Data.Enumerations;
 using APIMonitor.server.Models;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace APIMonitor.server.Identity.AdminControllers;
+namespace APIMonitor.server.Controllers;
 
-[Authorize(Roles = "Admin")]
 [ApiController]
 [Route("api/[controller]")]
 public class ThreatLogsController : ControllerBase
@@ -20,13 +18,7 @@ public class ThreatLogsController : ControllerBase
     }
 
     [HttpGet]
-    [ProducesResponseType(typeof(List<ThreatAlert>), 200)]
-    [ProducesResponseType(404)]
-    public async Task<IActionResult> GetThreatLogs(
-        [FromQuery] DateTime? startDate,
-        [FromQuery] DateTime? endDate,
-        [FromQuery] AlertSeverity? severity,
-        [FromQuery] string? adminName)
+    public async Task<IActionResult> GetThreatLogs([FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, [FromQuery] AlertSeverity? severity, [FromQuery] string? adminName)
     {
         IQueryable<ThreatAlert> query = dbContext.ThreatAlerts.AsQueryable();
 
@@ -51,12 +43,7 @@ public class ThreatLogsController : ControllerBase
         }
 
         List<ThreatAlert> logs = await query.OrderByDescending(alert => alert.TimeStamp).ToListAsync();
-
-        if (logs.Count == 0)
-        {
-            return NotFound(new { message = "No matching threat logs found." });
-        }
-
-        return Ok(logs);
+        
+        return logs.Any() ? Ok(logs) : NotFound(new { message = "No matching threat logs found." });
     }
 }

@@ -16,14 +16,10 @@ public class ApiMetricsController : ControllerBase
     {
         this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
-
+    
     [Authorize]
     [HttpGet]
-    public async Task<IActionResult> GetMetrics(
-        [FromQuery] DateTime? startDate,
-        [FromQuery] DateTime? endDate,
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 20)
+    public async Task<IActionResult> GetMetrics([FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         if (page < 1 || pageSize < 1)
         {
@@ -80,9 +76,7 @@ public class ApiMetricsController : ControllerBase
 
     [Authorize]
     [HttpGet("summary")]
-    public async Task<IActionResult> GetMetricsSummary(
-        [FromQuery] DateTime? startDate,
-        [FromQuery] DateTime? endDate)
+    public async Task<IActionResult> GetMetricsSummary([FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate)
     {
         IQueryable<ApiMetrics> query = dbContext.ApiMetrics.AsQueryable();
 
@@ -95,17 +89,17 @@ public class ApiMetricsController : ControllerBase
         {
             query = query.Where(metric => metric.TimeStamp <= endDate.Value);
         }
-
-        int totalRequests = await query.SumAsync(metric => metric.TotalRequests);
-        int totalErrors = await query.SumAsync(metric => metric.ErrorsCount);
-        double avgResponseTime = await query.AverageAsync(metric => metric.AverageResponseTime.TotalMilliseconds);
-
-        return Ok(new
+        
+        List<ApiMetrics> metrics = await query.ToListAsync();
+        
+        var summary = new
         {
-            totalRequests,
-            totalErrors,
-            averageResponseTimeMs = avgResponseTime
-        });
+            totalRequests = metrics.Sum(m => m.TotalRequests),
+            averageResponseTimeMs = metrics.Any() ? metrics.Average(m => m.AverageResponseTime.TotalMilliseconds) : 0,
+            totalErrors = metrics.Sum(m => m.ErrorsCount)
+        };
+        
+        return Ok(summary);
     }
 
     [Authorize(Roles = "Admin")]

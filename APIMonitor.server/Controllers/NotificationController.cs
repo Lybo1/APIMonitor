@@ -24,20 +24,16 @@ public class NotificationController : ControllerBase
 
     [Authorize]
     [HttpGet("user")]
-    public async Task<IActionResult> GetUserNotifications([FromHeader(Name = "Authorization")] string token, HttpContext context)
+    public async Task<IActionResult> GetUserNotifications()
     {
         string userId = GetUserId();
-
-        if (!await ValidateUserRequest(context, userId))
+        
+        if (string.IsNullOrEmpty(userId))
         {
-            return Unauthorized(new { message = "Untrusted device or suspicious activity detected." });
+            return Unauthorized(new { message = "Invalid authentication." });
         }
 
-        List<Notification> notifications = await dbContext.Notifications
-                                                          .AsNoTracking()
-                                                          .Where(n => n.UserId.ToString() == userId)
-                                                          .OrderByDescending(n => n.CreatedAt)
-                                                          .ToListAsync();
+        List<Notification> notifications = await notificationService.GetUserNotificationsAsync(userId);
         
         return Ok(notifications);
     }
