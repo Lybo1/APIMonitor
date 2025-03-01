@@ -8,7 +8,6 @@ export interface User {
     createdAt: string;
     refreshTokenExpiry: string;
     failedLoginAttempts: number;
-    rememberMe: boolean;
     isLockedOut: boolean;
     isAdmin: boolean;
     roles: string[];

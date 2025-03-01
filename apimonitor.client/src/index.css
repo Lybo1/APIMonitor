@@ -34,3 +34,19 @@ button:hover {
 button:active {
   transform: scale(0.95);
 }
+
+@keyframes gradient-x {
+  0% {
+    background-position: 100% 0%;
+  }
+  50% {
+    background-position: 0% 100%;
+  }
+  100% {
+    background-position: 100% 0%;
+  }
+}
+
+.animate-gradient-x {
+  animation: gradient-x 5s ease infinite;
+}

@@ -32,17 +32,19 @@ const useApiScan = () => {
         setScanError(null);
 
         try {
-            const response = await axios.post<ApiScanResponse>("http://localhost:5028/api/ApiScan/scan-single", {
-                params: {
-                    apiUrl,
-                }
-            });
+            const response = await axios.post<ApiScanResponse>(
+                "http://localhost:5028/api/ApiScan/scan-single",
+                { apiUrl }
+            );
 
             setScanData(response.data);
-            toast.success("API scan triggered successfully.");
+            toast.success("Single API scan triggered successfully.");
         } catch (error: any) {
-            setScanError(error.response?.data?.message || "An error occurred.");
-            toast.error(scanError || "An error occurred.");
+            const errorMessage = error.response?.data?.message || "An error occurred.";
+            setScanError(errorMessage);
+            toast.error(errorMessage);
+        } finally {
+            setIsLoading(false);
         }
     };
 
