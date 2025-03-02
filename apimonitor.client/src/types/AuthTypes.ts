@@ -4,7 +4,7 @@ export interface User {
     username: string;
     firstName: string;
     lastName: string;
-    refreshToken: string | null;
+    refreshToken: string;
     createdAt: string;
     refreshTokenExpiry: string;
     failedLoginAttempts: number;
@@ -19,8 +19,7 @@ export interface AuthContextType {
     refreshToken: string | null;
     isAuthenticated: boolean;
     login: (email: string, password: string, rememberMe: boolean) => Promise<void>;
-    register: (email: string, password: string, confirmPassword: string, rememberMe: boolean) => Promise<void>;
     logout: () => void;
-    refreshAuthToken: () => Promise<void>;
+    refreshAuthToken: (existingRefreshToken: string) => Promise<void>;
     setUser: React.Dispatch<React.SetStateAction<User | null>>;
 }

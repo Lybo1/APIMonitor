@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, ReactNode, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { User, AuthContextType } from "../types/AuthTypes.ts";
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -10,17 +10,19 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
-    const [token, setToken] = useState<string | null>(null);
-    const [refreshToken, setRefreshToken] = useState<string | null>(null);
+    const [token, setToken] = useState<string | null>(localStorage.getItem('accessToken'));
+    const [refreshToken, setRefreshToken] = useState<string | null>(localStorage.getItem('refreshToken'));
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     const navigate = useNavigate();
+    const location = useLocation();
 
-    const verifyToken = async (): Promise<boolean> => {
+    const verifyToken = async (accessToken: string): Promise<boolean> => {
         try {
             const response = await fetch("http://localhost:5028/api/RefreshToken/verify", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${accessToken}`,
                 },
                 credentials: 'include',
             });
@@ -35,69 +37,52 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     useEffect(() => {
         const initializeAuth = async () => {
             const storedUser = localStorage.getItem('user');
+            const storedToken = localStorage.getItem('accessToken');
+            const storedRefresh = localStorage.getItem('refreshToken');
             const rememberMe = localStorage.getItem('rememberMe') === 'true';
 
-            console.log("Initializing auth:", { storedUser, rememberMe });
+            console.log("Initializing auth:", { storedUser, storedToken, storedRefresh, rememberMe });
 
-            if (storedUser && rememberMe) {
+            if (storedUser && storedToken && rememberMe) {
                 const parsedUser: User = JSON.parse(storedUser);
-                // Only verify if we're not freshly logged in
-                if (!isAuthenticated) {
-                    const isTokenValid = await verifyToken();
-                    console.log("Token valid:", isTokenValid);
-                    if (isTokenValid) {
-                        setUser(parsedUser);
-                        setToken('http-only-access-token');
-                        setRefreshToken(parsedUser.refreshToken || null);
-                        setIsAuthenticated(true);
+                setUser(parsedUser);
+                setToken(storedToken);
+                setRefreshToken(storedRefresh);
+
+                const isTokenValid = await verifyToken(storedToken);
+                console.log("Token valid:", isTokenValid);
+
+                if (isTokenValid) {
+                    setIsAuthenticated(true);
+                    if (location.pathname === '/login' || location.pathname === '/') {
                         navigate("/homepage");
-                    } else if (parsedUser.refreshToken) {
-                        try {
-                            await refreshAuthToken(parsedUser.refreshToken);
-                        } catch {
-                            setIsAuthenticated(false);
-                            localStorage.clear();
-                            navigate("/login");
-                        }
-                    } else {
-                        setIsAuthenticated(false);
-                        localStorage.clear();
-                        navigate("/login");
+                    }
+                } else if (storedRefresh) {
+                    try {
+                        await refreshAuthToken(storedRefresh);
+                    } catch {
+                        logout();
                     }
                 } else {
-                    // Fresh login, trust it
-                    setUser(parsedUser);
-                    setToken('http-only-access-token');
-                    setRefreshToken(parsedUser.refreshToken || null);
-                    setIsAuthenticated(true);
-                    navigate("/homepage");
+                    logout();
                 }
-            } else {
-                setIsAuthenticated(false);
+            } else if (!isAuthenticated && location.pathname !== '/register') {
                 navigate("/login");
             }
         };
 
         initializeAuth();
-    }, [navigate, isAuthenticated]);
+    }, []);
 
     const login = async (email: string, password: string, rememberMe: boolean) => {
         const response = await fetch("http://localhost:5028/api/Login/login", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                email,
-                password,
-                rememberMe
-            }),
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password, rememberMe }),
             credentials: 'include',
         });
 
-        if (!response.ok) {
-            throw new Error((await response.json()).message || "Login failed");
-        }
+        if (!response.ok) throw new Error((await response.json()).message || "Login failed");
 
         const data = await response.json();
         console.log("Login response:", JSON.stringify(data, null, 2));
@@ -114,82 +99,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             failedLoginAttempts: 0,
             isLockedOut: false,
             isAdmin: data.user.isAdmin,
-            roles: data.user.roles || ['User'],
+            roles: data.user.roles || ['USER'],
         };
 
+        const accessToken = data.accessToken;
         setUser(user);
-        setToken('http-only-access-token');
+        setToken(accessToken);
         setRefreshToken(data.refreshToken || null);
         setIsAuthenticated(true);
 
         if (rememberMe) {
             localStorage.setItem("user", JSON.stringify(user));
+            localStorage.setItem("accessToken", accessToken);
+            localStorage.setItem("refreshToken", data.refreshToken || '');
             localStorage.setItem('rememberMe', 'true');
         } else {
-            localStorage.removeItem('rememberMe');
             localStorage.removeItem('user');
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('rememberMe');
         }
 
         console.log("User set:", JSON.stringify(user, null, 2));
         navigate("/homepage");
-    };
-
-    const register = async (email: string, password: string, confirmPassword: string, rememberMe: boolean) => {
-        try {
-            if (password !== confirmPassword) {
-                throw new Error("Passwords do not match");
-            }
-
-            const response = await fetch("http://localhost:5028/api/Register/register", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    email,
-                    password,
-                    confirmPassword,
-                    rememberMe
-                }),
-                credentials: 'include',
-            });
-
-            if (!response.ok) {
-                throw new Error((await response.json()).message || "Registration failed");
-            }
-
-            const data = await response.json();
-            const user: User = {
-                id: data.id || 0,
-                email: data.email || email,
-                username: data.username || email.split('@')[0],
-                firstName: data.firstName || '',
-                lastName: data.lastName || '',
-                refreshToken: data.refreshToken || '',
-                createdAt: data.createdAt || new Date().toISOString(),
-                refreshTokenExpiry: rememberMe ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() : '',
-                failedLoginAttempts: 0,
-                isLockedOut: false,
-                isAdmin: data.isAdmin || false,
-                roles: data.roles || ['User'],
-            };
-
-            setUser(user);
-            setToken('http-only-access-token');
-            setRefreshToken(data.refreshToken || null);
-            setIsAuthenticated(true);
-
-            if (rememberMe) {
-                localStorage.setItem("user", JSON.stringify(user));
-                localStorage.setItem("rememberMe", 'true');
-            } else {
-                localStorage.removeItem('rememberMe');
-            }
-            navigate("/homepage");
-        } catch (error) {
-            console.error("Registration error: ", error);
-            throw error;
-        }
     };
 
     const logout = () => {
@@ -207,48 +139,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
             const response = await fetch("http://localhost:5028/api/RefreshToken/refresh", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ refreshToken: existingRefreshToken }),
                 credentials: 'include',
             });
 
-            if (!response.ok) {
-                throw new Error("Token refresh failed");
-            }
+            if (!response.ok) throw new Error("Token refresh failed");
 
             const data = await response.json();
-            setToken('http-only-access-token');
+            const newToken = data.accessToken;
+            setToken(newToken);
             setRefreshToken(data.refreshToken || null);
             setIsAuthenticated(true);
 
             if (localStorage.getItem('rememberMe') === 'true' && user) {
+                localStorage.setItem("accessToken", newToken);
+                localStorage.setItem("refreshToken", data.refreshToken || '');
                 localStorage.setItem("user", JSON.stringify({ ...user, refreshToken: data.refreshToken || null }));
             }
 
-            navigate("/homepage");
+            if (location.pathname === '/login') navigate("/homepage");
         } catch (error) {
             console.error('Token refresh failed:', error);
-            // Don't logout immediately—let user retry manually
-            return false;
+            logout();
         }
     };
 
     return (
-        <AuthContext.Provider
-            value={{
-                user,
-                token,
-                refreshToken,
-                isAuthenticated,
-                login,
-                register,
-                logout,
-                refreshAuthToken,
-                setUser,
-            }}
-        >
+        <AuthContext.Provider value={{ user, token, refreshToken, isAuthenticated, login, logout, refreshAuthToken, setUser }}>
             {children}
         </AuthContext.Provider>
     );
@@ -256,8 +174,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
 export const useAuth = (): AuthContextType => {
     const context = useContext(AuthContext);
-    if (!context) {
-        throw new Error("useAuth must be used within an AuthProvider");
-    }
+    if (!context) throw new Error("useAuth must be used within an AuthProvider");
     return context;
 };

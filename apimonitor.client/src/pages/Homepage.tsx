@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext.tsx';
 import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query'; // v5 import
 import { motion } from 'framer-motion';
 import { BellIcon, ShieldExclamationIcon, QuestionMarkCircleIcon, UserIcon } from '@heroicons/react/24/solid';
 import { useNavigate } from 'react-router-dom';
@@ -62,21 +62,26 @@ const Homepage: React.FC = () => {
     const [isScanning, setIsScanning] = useState(false);
     const cliRef = useRef<HTMLDivElement>(null);
 
-    const { data: metrics, isLoading: metricsLoading, error: metricsError, refetch: refetchMetrics } = useQuery(
-        'metrics',
-        fetchMetrics,
-        { enabled: !!token, retry: false }
-    );
-    const { data: threats, isLoading: threatsLoading, error: threatsError, refetch: refetchThreats } = useQuery(
-        'threats',
-        fetchThreats,
-        { enabled: !!token, retry: false }
-    );
-    const { data: notifications, isLoading: notifsLoading, error: notifsError, refetch: refetchNotifications } = useQuery(
-        'notifications',
-        fetchNotifications,
-        { enabled: !!token, retry: false }
-    );
+    const { data: metrics, isLoading: metricsLoading, error: metricsError, refetch: refetchMetrics } = useQuery({
+        queryKey: ['metrics'],
+        queryFn: fetchMetrics,
+        enabled: !!token,
+        retry: false,
+    });
+
+    const { data: threats, isLoading: threatsLoading, error: threatsError, refetch: refetchThreats } = useQuery({
+        queryKey: ['threats'],
+        queryFn: fetchThreats,
+        enabled: !!token,
+        retry: false,
+    });
+
+    const { data: notifications, isLoading: notifsLoading, error: notifsError, refetch: refetchNotifications } = useQuery({
+        queryKey: ['notifications'],
+        queryFn: fetchNotifications,
+        enabled: !!token,
+        retry: false,
+    });
 
     useEffect(() => {
         console.log("Homepage render - User:", JSON.stringify(user), "Token:", token);
@@ -384,7 +389,7 @@ const Homepage: React.FC = () => {
                                 <li><code>metrics</code>: Show API metrics</li>
                                 <li><code>threats</code>: Show threat logs</li>
                                 <li><code>scan</code>: Full API scan</li>
-                                <li><code>scan-single  [key]</code>: Scan one API</li>
+                                <li><code>scan-single [key]</code>: Scan one API</li>
                                 <li><code>clear</code>: Clear CLI</li>
                             </ul>
                         </motion.div>
@@ -392,7 +397,7 @@ const Homepage: React.FC = () => {
                 </form>
             </div>
         </div>
-);
+    );
 };
 
 export default Homepage;

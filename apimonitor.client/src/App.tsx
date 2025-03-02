@@ -4,8 +4,7 @@ import Homepage from "./pages/Homepage.tsx";
 import LoginPage from "./pages/Login.tsx";
 import { AuthProvider } from "./context/AuthContext.tsx";
 import ProtectedRoute from "./ProtectedRoute.tsx";
-import { QueryClientProvider, QueryClient } from "react-query";
-import { ReactQueryDevtools } from "react-query/devtools";
+import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import UserAccount from "./pages/UserPage";
 
 const queryClient = new QueryClient();
@@ -25,12 +24,11 @@ const App = () => {
                         </Route>
 
                         <Route element={<ProtectedRoute />}>
-                            <Route path='"account' element={<UserAccount />} />
+                            <Route path="/account" element={<UserAccount />} />
                         </Route>
                     </Routes>
                 </AuthProvider>
             </BrowserRouter>
-            {<ReactQueryDevtools initialIsOpen={false} />}
         </QueryClientProvider>
     );
 }
