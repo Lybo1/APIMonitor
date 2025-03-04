@@ -43,7 +43,7 @@ const LoginPage: React.FC = () => {
             await login(formData.email, formData.password, formData.rememberMe);
         } catch (error) {
             console.error("Fetch error:", error);
-            setError((error as Error).message || "An error occurred while making the request.");
+            setError("Username or password is incorrect"); // Updated error message
         } finally {
             setLoading(false);
         }
@@ -52,79 +52,104 @@ const LoginPage: React.FC = () => {
     const closeModal = () => setError(null);
 
     return (
-        <div className="flex items-center justify-center min-h-screen text-center">
+        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-green-400 font-mono tracking-wide p-4">
             <Heading />
-            <div className="w-1/2 flex justify-center items-center">
+            <motion.div
+                className="w-full max-w-md bg-black p-6 rounded-lg border-4 border-green-500 shadow-lg tracking-wide"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+            >
                 <form
                     onSubmit={handleLogin}
-                    className="backdrop-blur-md bg-gray-800/20 border border-white/30 rounded-2xl p-8 max-w-md w-full text-white shadow-lg transition-transform transform hover:scale-105 hover:shadow-2xl"
+                    className="space-y-4"
                 >
-                    <div className="mb-4 text-gray-900 font-bold">
-                        <label className="block mb-2">Email</label>
-                        <input
+                    <div className="mb-4">
+                        <label className="block mb-2 text-green-400 font-bold">Email</label>
+                        <motion.input
                             type="email"
                             name="email"
                             value={formData.email}
                             onChange={handleChange}
-                            className="w-full p-3 bg-white/20 text-white placeholder-gray-300 border border-white/30 rounded-md focus:outline-none focus:ring-2 focus:ring-white transition-all ease-in-out hover:bg-white/25"
+                            className="w-full p-3 bg-gray-800 text-green-400 placeholder-green-600 border border-green-500 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 transition-all ease-in-out hover:bg-gray-700"
+                            whileFocus={{ scale: 1.02 }}
+                            transition={{ duration: 0.2 }}
+                            placeholder="Enter your email"
                         />
                     </div>
-                    <div className="mb-4 text-gray-900 font-bold">
-                        <label className="block mb-2">Password</label>
-                        <input
+                    <div className="mb-4">
+                        <label className="block mb-2 text-green-400 font-bold">Password</label>
+                        <motion.input
                             type="password"
                             name="password"
                             value={formData.password}
                             onChange={handleChange}
-                            className="w-full p-3 bg-white/20 text-white placeholder-gray-300 border border-white/30 rounded-md focus:outline-none focus:ring-2 focus:ring-white transition-all ease-in-out hover:bg-white/25"
+                            className="w-full p-3 bg-gray-800 text-green-400 placeholder-green-600 border border-green-500 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 transition-all ease-in-out hover:bg-gray-700"
+                            whileFocus={{ scale: 1.02 }}
+                            transition={{ duration: 0.2 }}
+                            placeholder="Enter your password"
                         />
                     </div>
-                    <div className="flex justify-center items-center mt-6 mb-4">
-                        <label className="flex items-center text-gray-900 font-bold">
-                            <input
+                    <div className="flex items-center mb-4">
+                        <label className="flex items-center text-green-400 font-bold">
+                            <motion.input
                                 type="checkbox"
                                 name="rememberMe"
                                 checked={formData.rememberMe}
                                 onChange={handleChange}
-                                className="accent-white"
+                                className="accent-green-400 ml-2"
+                                whileTap={{ scale: 1.1 }}
+                                transition={{ duration: 0.2 }}
                             />
-                            <span className="ml-2 ">Remember Me</span>
+                            <span className=" ml-2 pb-3">Remember me</span>
                         </label>
                     </div>
-                    <div>
-                        <button
+                    <div className="space-y-4">
+                        <motion.button
                             type="submit"
                             disabled={loading || !formData.email || !formData.password}
-                            className="w-full py-3 bg-white text-gray-900 font-semibold rounded-md shadow-md transition-all ease-in-out hover:bg-gray-200 hover:scale-105"
+                            className="w-full py-3 bg-green-500 text-gray-900 font-semibold rounded-md shadow-md transition-all ease-in-out hover:bg-green-600 hover:scale-105 disabled:bg-gray-600 disabled:cursor-not-allowed"
+                            whileHover={{ scale: 1.05 }}
+                            transition={{ duration: 0.2 }}
                         >
                             {loading ? "Logging in..." : "Submit"}
-                        </button>
-                        <button
+                        </motion.button>
+                        <motion.button
                             type="button"
                             onClick={() => navigate('/register')}
-                            className="w-full mt-4 py-3 bg-white text-gray-900 font-semibold rounded-md shadow-md transition-all ease-in-out hover:bg-gray-200 hover:scale-105"
+                            className="w-full py-3 bg-green-500 text-gray-900 font-semibold rounded-md shadow-md transition-all ease-in-out hover:bg-green-600 hover:scale-105"
+                            whileHover={{ scale: 1.05 }}
+                            transition={{ duration: 0.2 }}
                         >
                             Register
-                        </button>
+                        </motion.button>
                     </div>
                 </form>
-            </div>
+            </motion.div>
             {error && (
-                <div className="fixed inset-0 flex justify-center items-center bg-black/50 z-50">
+                <motion.div
+                    className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                >
                     <motion.div
-                        className="bg-red-600 text-white p-6 rounded-lg shadow-lg max-w-md w-full text-center"
-                        initial={{ scale: 0.8 }}
+                        className="bg-gray-800 p-6 rounded-lg border-4 border-red-500 shadow-lg max-w-md w-full text-center text-green-400 font-mono tracking-wide"
+                        initial={{ scale: 0.9 }}
                         animate={{ scale: 1 }}
+                        transition={{ duration: 0.3 }}
                     >
                         <p className="mb-4">{error}</p>
-                        <button
+                        <motion.button
                             onClick={closeModal}
-                            className="bg-white text-gray-900 px-4 py-2 rounded-md font-semibold transition-all ease-in-out hover:bg-gray-100"
+                            className="bg-red-500 text-gray-900 px-4 py-2 rounded-md font-semibold transition-all ease-in-out hover:bg-red-600 hover:scale-105"
+                            whileHover={{ scale: 1.05 }}
+                            transition={{ duration: 0.2 }}
                         >
                             Close
-                        </button>
+                        </motion.button>
                     </motion.div>
-                </div>
+                </motion.div>
             )}
         </div>
     );

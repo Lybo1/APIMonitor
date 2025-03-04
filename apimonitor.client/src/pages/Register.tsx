@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import useCustomNavigate from "../utils/navigation.ts";
 import { useAuth } from "../context/AuthContext.tsx";
+import { useNavigate } from "react-router-dom";
 
 const RegisterPage: React.FC = () => {
     const { register } = useAuth();
+    const navigate = useNavigate();
     const { redirectToHome } = useCustomNavigate();
 
     const initialFormData = {
@@ -30,7 +32,7 @@ const RegisterPage: React.FC = () => {
         }
 
         if (name === "rememberMe") {
-            localStorage.setItem("rememberMe", value);
+            localStorage.setItem("rememberMe", checked.toString()); // Fixed to use checked.toString()
         }
     };
 
@@ -55,40 +57,10 @@ const RegisterPage: React.FC = () => {
         }
 
         try {
-            // const response = await fetch("http://localhost:5028/api/Register/register", {
-            //     method: "POST",
-            //     headers: {
-            //         "Content-Type": "application/json",
-            //     },
-            //     body: JSON.stringify({
-            //         email: formData.email,
-            //         password: formData.password,
-            //         confirmPassword: formData.confirmPassword,
-            //         rememberMe: formData.rememberMe,
-            //     }),
-
             const { email, password, confirmPassword, rememberMe } = formData;
-
             await register(email, password, confirmPassword, rememberMe);
-
             setError(null);
             redirectToHome();
-
-            // if (!response.ok) {
-            //     const errorData = await response.json();
-            //     console.error("Server response error: ", errorData);
-            //     setError(errorData?.message || "An error occurred.");
-            //     return;
-            // }
-            //
-            // const responseData = await response.json();
-            //
-            // if (responseData.message === "User registered successfully.") {
-            //     console.log("Registration success", responseData);
-            //     redirectToHome();
-            // } else {
-            //     setError("Unexpected response from server.");
-            // }
         } catch (error) {
             console.error("Fetch error:", error);
             setError("Error occurred while making the request.");
@@ -100,112 +72,138 @@ const RegisterPage: React.FC = () => {
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen text-center">
-            <div className="flex flex-col justify-center items-center px-6">
-                <motion.h1
-                    className="text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gray-800 via-gray-600 to-gray-400 mb-2"
-                    initial={{ scale: 1 }}
-                    animate={{ scale: [1, 1.05, 1] }}
-                    transition={{
-                        duration: 1,
-                        repeat: Infinity,
-                        repeatDelay: 0,
-                        ease: "easeInOut",
-                    }}
-                    style={{
-                        textShadow:
-                            "0px 5px 5px rgba(0, 0, 0, 0.6), 0px 0px 10px rgba(255, 255, 255, 0.6)",
-                    }}
-                >
-                    API Monitor
-                </motion.h1>
-            </div>
+        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-green-400 font-mono tracking-wide p-4">
+            <motion.h1
+                className="text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-500 via-green-400 to-green-300 mb-8 font-mono tracking-wide"
+                initial={{ scale: 1 }}
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{
+                    duration: 1,
+                    repeat: Infinity,
+                    repeatDelay: 0,
+                    ease: "easeInOut",
+                }}
+                style={{
+                    textShadow:
+                        "0px 5px 5px rgba(0, 0, 0, 0.6), 0px 0px 10px rgba(0, 128, 0, 0.8)", // Green glow
+                }}
+            >
+                API Monitor
+            </motion.h1>
 
-            <div className="w-1/2 flex justify-center items-center">
+            <motion.div
+                className="w-full max-w-md bg-black p-6 rounded-lg border-4 border-green-500 shadow-lg tracking-wide"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+            >
                 <form
                     onSubmit={handleRegister}
-                    className="backdrop-blur-md bg-gray-800/20 border border-white/30 rounded-2xl p-8 max-w-md w-full text-white shadow-lg transition-transform transform hover:scale-105 hover:shadow-2xl"
+                    className="space-y-4"
                 >
-                    <div className="mb-4 text-gray-900 font-bold">
-                        <label className="block mb-2">Email</label>
-                        <div>
-                            <input
-                                type="email"
-                                name="email"
-                                value={formData.email}
-                                onChange={handleChange}
-                                className="w-full p-3 bg-white/20 text-white placeholder-gray-300 border border-white/30 rounded-md focus:outline-none focus:ring-2 focus:ring-white transition-all ease-in-out hover:bg-white/25"
-                            />
-                        </div>
+                    <div className="mb-4">
+                        <label className="block mb-2 text-green-400 font-bold">Email</label>
+                        <motion.input
+                            type="email"
+                            name="email"
+                            value={formData.email}
+                            onChange={handleChange}
+                            className="w-full p-3 bg-gray-800 text-green-400 placeholder-green-600 border border-green-500 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 transition-all ease-in-out hover:bg-gray-700"
+                            whileFocus={{ scale: 1.02 }}
+                            transition={{ duration: 0.2 }}
+                            placeholder="Enter your email"
+                        />
                     </div>
 
-                    <div className="mb-4 text-gray-900 font-bold">
-                        <label className="block mb-2">Password</label>
-                        <div>
-                            <input
-                                type="password"
-                                name="password"
-                                value={formData.password}
-                                onChange={handleChange}
-                                className="w-full p-3 bg-white/20 text-white placeholder-gray-300 border border-white/30 rounded-md focus:outline-none focus:ring-2 focus:ring-white transition-all ease-in-out hover:bg-white/25"
-                            />
-                        </div>
+                    <div className="mb-4">
+                        <label className="block mb-2 text-green-400 font-bold">Password</label>
+                        <motion.input
+                            type="password"
+                            name="password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            className="w-full p-3 bg-gray-800 text-green-400 placeholder-green-600 border border-green-500 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 transition-all ease-in-out hover:bg-gray-700"
+                            whileFocus={{ scale: 1.02 }}
+                            transition={{ duration: 0.2 }}
+                            placeholder="Enter your password"
+                        />
                     </div>
 
-                    <div className="mb-4 text-gray-900 font-bold">
-                        <label className="block mb-2">Confirm password</label>
-                        <div>
-                            <input
-                                type="password"
-                                name="confirmPassword"
-                                value={formData.confirmPassword}
-                                onChange={handleChange}
-                                className="w-full p-3 bg-white/20 text-white placeholder-gray-300 border border-white/30 rounded-md focus:outline-none focus:ring-2 focus:ring-white transition-all ease-in-out hover:bg-white/25"
-                            />
-                        </div>
+                    <div className="mb-4">
+                        <label className="block mb-2 text-green-400 font-bold">Confirm Password</label>
+                        <motion.input
+                            type="password"
+                            name="confirmPassword"
+                            value={formData.confirmPassword}
+                            onChange={handleChange}
+                            className="w-full p-3 bg-gray-800 text-green-400 placeholder-green-600 border border-green-500 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 transition-all ease-in-out hover:bg-gray-700"
+                            whileFocus={{ scale: 1.02 }}
+                            transition={{ duration: 0.2 }}
+                            placeholder="Confirm your password"
+                        />
                     </div>
 
-                    <div className="flex justify-center items-center mt-6 mb-4">
-                        <label className="flex items-center text-gray-900 font-bold">
-                                <input
-                                    type="checkbox"
-                                    name="rememberMe"
-                                    value="true"
-                                    checked={formData.rememberMe}
-                                    onChange={handleChange}
-                                    className="accent-white"
-                                />
-                            <span className="ml-2">Remember Me</span>
+                    <div className="flex items-center mb-4">
+                        <label className="flex items-center text-green-400 font-bold">
+                            <motion.input
+                                type="checkbox"
+                                name="rememberMe"
+                                checked={formData.rememberMe}
+                                onChange={handleChange}
+                                className="accent-green-400 mr-2"
+                                whileTap={{ scale: 1.1 }}
+                                transition={{ duration: 0.2 }}
+                            />
+                            <span className="ml-2 pb-3">Remember me</span>
                         </label>
                     </div>
 
-                    <div>
-                        <button
-                            type="submit"
-                            disabled={!!error || !formData.email || !formData.password || !formData.confirmPassword}
-                            className="w-full py-3 bg-white text-gray-900 font-semibold rounded-md shadow-md transition-all ease-in-out hover:bg-gray-100 hover:scale-105"
-                        >
-                            Submit
-                        </button>
-                    </div>
+                    <motion.button
+                        type="submit"
+                        disabled={!!error || !formData.email || !formData.password || !formData.confirmPassword}
+                        className="w-full py-3 bg-green-500 text-gray-900 font-semibold rounded-md shadow-md transition-all ease-in-out hover:bg-green-600 hover:scale-105 disabled:bg-gray-600 disabled:cursor-not-allowed"
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        Submit
+                    </motion.button>
+
+                    <motion.button
+                        type="submit"
+                        onClick={() => navigate("/login")}
+                        className="w-full py-3 bg-green-500 text-gray-900 font-semibold rounded-md shadow-md transition-all ease-in-out hover:bg-green-600 hover:scale-105 disabled:bg-gray-600 disabled:cursor-not-allowed"
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        Already have an account? Login
+                    </motion.button>
                 </form>
-            </div>
+            </motion.div>
 
             {error && (
-                <div className="fixed inset-0 flex justify-center items-center bg-black/50 z-50">
-                    <motion.div className="bg-red-600 text-white p-6 rounded-lg shadow-lg max-w-md w-full text-center"
-                    initial={{ scale: 0.8 }}
-                    animate={{ scale: 1 }}
+                <motion.div
+                    className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                >
+                    <motion.div
+                        className="bg-gray-800 p-6 rounded-lg border-4 border-red-500 shadow-lg max-w-md w-full text-center text-green-400 font-mono tracking-wide"
+                        initial={{ scale: 0.9 }}
+                        animate={{ scale: 1 }}
+                        transition={{ duration: 0.3 }}
                     >
                         <p className="mb-4">{error}</p>
-                        <button
+                        <motion.button
                             onClick={closeModal}
-                            className="bg-white text-gray-900 px-4 py-2 rounded-md font-semibold transition-all ease-in-out hover:bg-gray-100"
+                            className="bg-red-500 text-gray-900 px-4 py-2 rounded-md font-semibold transition-all ease-in-out hover:bg-red-600 hover:scale-105"
+                            whileHover={{ scale: 1.05 }}
+                            transition={{ duration: 0.2 }}
                         >
                             Close
-                        </button>
+                        </motion.button>
                     </motion.div>
-                </div>
+                </motion.div>
             )}
         </div>
     );

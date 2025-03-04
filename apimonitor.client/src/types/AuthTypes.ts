@@ -21,5 +21,6 @@ export interface AuthContextType {
     login: (email: string, password: string, rememberMe: boolean) => Promise<void>;
     logout: () => void;
     refreshAuthToken: (existingRefreshToken: string) => Promise<void>;
+    register: (email: string, password: string, confirmPassword: string, rememberMe: boolean) => Promise<void>;
     setUser: React.Dispatch<React.SetStateAction<User | null>>;
 }
