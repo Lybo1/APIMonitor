@@ -4,5 +4,5 @@ namespace APIMonitor.server.Services.GeoLocationService;
 
 public interface IGeoLocationService
 {
-    Task<IpGeolocation> GetLocationAsync(string ipAddress);
+    (string country, string city, double? latitude, double? longitude, string timeZone) GetGeolocation(string ipAddress);
 }

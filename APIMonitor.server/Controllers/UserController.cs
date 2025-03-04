@@ -28,6 +28,33 @@ public class UserController : ControllerBase
         this.notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
     }
 
+    [HttpGet("me")]
+    public async Task<IActionResult> GetCurrentUser()
+    {
+        var user =  await userManager.GetUserAsync(HttpContext.User);
+
+        if (user == null)
+        {
+            return BadRequest("User not found.");
+        }
+        
+        bool isAdmin = await  userManager.IsInRoleAsync(user, "Admin");
+        
+        return Ok(new
+        {
+            Id = user.Id,
+            Email = user.Email,
+            UserName = user.UserName,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            CreatedAt = user.CreatedAt,
+            FailedLoginAttempts = user.FailedLoginAttempts,
+            IsLockedOut = user.IsLockedOut,
+            IsAdmin = isAdmin,
+            Roles = await userManager.GetRolesAsync(user),
+        });
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetUserDetails()
     {

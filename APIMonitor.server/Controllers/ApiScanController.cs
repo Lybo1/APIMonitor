@@ -1,121 +1,120 @@
-using System.Diagnostics;
+using System;
 using System.Security.Claims;
+using System.Threading.Tasks;
 using APIMonitor.server.Hubs;
-using APIMonitor.server.Models;
 using APIMonitor.server.Services.ApiScannerService;
 using APIMonitor.server.Services.AuditLogService;
 using APIMonitor.server.Services.NotificationsService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 
 namespace APIMonitor.server.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class ApiScanController : ControllerBase 
+public class ApiScanController : ControllerBase
 {
-    private readonly IApiScannerService apiScannerService;
-    private readonly IHubContext<NotificationHub> hubContext;
-    private readonly IAuditLogService auditLogService;
-    private readonly INotificationService notificationService;
+    private readonly IApiScannerService _apiScannerService;
+    private readonly IHubContext<NotificationHub> _hubContext;
+    private readonly IAuditLogService _auditLogService;
+    private readonly INotificationService _notificationService;
+    private readonly ILogger<ApiScanController> _logger;
 
-    public ApiScanController(IApiScannerService apiScannerService, IHubContext<NotificationHub> hubContext, IAuditLogService auditLogService, INotificationService notificationService)
+    public ApiScanController(
+        IApiScannerService apiScannerService,
+        IHubContext<NotificationHub> hubContext,
+        IAuditLogService auditLogService,
+        INotificationService notificationService,
+        ILogger<ApiScanController> logger)
     {
-        this.apiScannerService = apiScannerService ?? throw new ArgumentNullException(nameof(apiScannerService));
-        this.hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
-        this.auditLogService = auditLogService ?? throw new ArgumentNullException(nameof(auditLogService));
-        this.notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
+        _apiScannerService = apiScannerService ?? throw new ArgumentNullException(nameof(apiScannerService));
+        _hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
+        _auditLogService = auditLogService ?? throw new ArgumentNullException(nameof(auditLogService));
+        _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    [HttpPost("scan")]
-    public async Task<IActionResult> ScanApis([FromHeader]string id)
+    // [HttpPost("scan")]
+    // public async Task<IActionResult> ScanApis([FromHeader] string id)
+    // {
+    //     if (string.IsNullOrEmpty(id))
+    //     {
+    //         _logger.LogWarning("ScanApis attempted without user ID.");
+    //         return BadRequest(new { message = "User ID header is required" });
+    //     }
+    //
+    //     try
+    //     {
+    //         _logger.LogInformation($"Starting batch scan triggered by userId: {id}");
+    //         await _hubContext.Clients.User(id).SendAsync("ReceiveNotification", $"[{DateTime.UtcNow:O}] Batch scan initiated for user {id}...");
+    //         await _apiScannerService.ScanApisAsync();
+    //         await _hubContext.Clients.User(id).SendAsync("ReceiveNotification", $"[{DateTime.UtcNow:O}] Batch scan completed.");
+    //
+    //         return Ok(new { message = "Manual API scan triggered successfully!" });
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.LogError(ex, $"Batch scan failed for userId: {id}");
+    //         await _hubContext.Clients.User(id).SendAsync("ReceiveNotification", $"[{DateTime.UtcNow:O}] Batch scan failed: {ex.Message}");
+    //         return StatusCode(500, new { message = $"Batch scan failed: {ex.Message}" });
+    //     }
+    // }
+
+    [Authorize]
+[HttpPost("scan-single")]
+public async Task<IActionResult> ScanSingleApi([FromQuery] string apiUrl, [FromQuery] string? method = "GET", [FromQuery] string? apiKey = null)
+{
+    if (string.IsNullOrEmpty(apiUrl))
     {
-        await apiScannerService.ScanApisAsync();
-        await hubContext.Clients.User(id).SendAsync("ReceiveNotification", "API scan triggered!");
-        
-        return Ok(new { message = "Manual API scan triggered successfully!" });
+        _logger.LogWarning("ScanSingleApi attempted without API URL.");
+        return BadRequest(new { message = "API URL is required" });
     }
-    
-    [Authorize] 
-    [HttpPost("scan-single")]
-    public async Task<IActionResult> ScanSingleApi([FromQuery] string apiUrl)
+
+    string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    if (string.IsNullOrEmpty(userId))
     {
-        DateTime startTime = DateTime.UtcNow;
-        
-        if (string.IsNullOrEmpty(apiUrl))
-        {
-            return BadRequest(new { message = "API URL is required" });
-        }
-        
-        string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        
-        if (string.IsNullOrEmpty(userId))
-        {
-            return Unauthorized(new { message = "Invalid authentication." });
-        }
-        
-        try
-        {
-            using HttpClient client = new();
-            Stopwatch totalStopwatch = Stopwatch.StartNew();
-            Stopwatch stepStopwatch = Stopwatch.StartNew();
-            
-            await hubContext.Clients.User(userId).SendAsync("ReceiveNotification", $"Resolving and connecting to {apiUrl}");
-            
-            var request = new HttpRequestMessage(HttpMethod.Get, apiUrl);
-            stepStopwatch.Restart();
-            
-            await hubContext.Clients.User(userId).SendAsync("ReceiveNotification", $"Sending GET request to {apiUrl}...");
-            var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
-            
-            stepStopwatch.Stop();
-            
-            double headersTime = stepStopwatch.Elapsed.TotalMilliseconds;
-            await hubContext.Clients.User(userId).SendAsync("ReceiveNotification", $"Headers received: {response.StatusCode} ({(int)response.StatusCode}) in {headersTime:F2}ms");
+        _logger.LogWarning("ScanSingleApi attempted without valid user authentication.");
+        return Unauthorized(new { message = "Invalid authentication" });
+    }
 
-            stepStopwatch.Restart();
-            
-            await hubContext.Clients.User(userId).SendAsync("ReceiveNotification", "Reading response body...");
-            string responseBody = await response.Content.ReadAsStringAsync();
-            
-            stepStopwatch.Stop();
+    method = method?.ToUpper();
+    if (!string.IsNullOrEmpty(method) && !new[] { "GET", "POST", "PUT", "DELETE" }.Contains(method))
+    {
+        _logger.LogWarning($"Invalid HTTP method '{method}' provided by userId: {userId}");
+        return BadRequest(new { message = $"Invalid HTTP method: {method}. Use GET, POST, PUT, or DELETE." });
+    }
 
-            double bodyTime = stepStopwatch.Elapsed.TotalMilliseconds;
+    DateTime startTime = DateTime.UtcNow;
+    _logger.LogInformation($"Starting single scan for {apiUrl} by userId: {userId}" + (method != null ? $" with method: {method}" : ""));
+    await _hubContext.Clients.User(userId).SendAsync("ReceiveNotification", $"[{startTime:O}] Initiating scan of {apiUrl}" + (method != null ? $" ({method})..." : "..."));
 
-            totalStopwatch.Stop();
-            
-            var result = new
-            {
-                totalRequests = 1,
-                headersResponseTime = headersTime,
-                totalResponseTime = headersTime + bodyTime, 
-                errorsCount = response.IsSuccessStatusCode ? 0 : 1,
-                statusCode = (int)response.StatusCode,
-                responseBody = responseBody.Length > 500 ? responseBody.Substring(0, 500) + "..." : responseBody
-            };
-            
-            await auditLogService.LogActionAsync(int.Parse(userId), "ScanSingleApi", $"Scanned {apiUrl} - Success: {response.IsSuccessStatusCode}", startTime);
-            await notificationService.SendNotificationAsync(userId, "API Scan", $"Scanned {apiUrl}: {result.errorsCount} errors.", HttpContext);
-            await hubContext.Clients.User(userId).SendAsync("ReceiveNotification", $"Scan completed - Status: {result.statusCode}, Headers: {result.headersResponseTime:F2}ms, Total: {result.totalResponseTime:F2}ms, Errors: {result.errorsCount}");
+    try
+    {
+        var metrics = await _apiScannerService.ScanSingleApiAsync(apiUrl, method, apiKey);
+        int parsedId = int.TryParse(userId, out int id) ? id : 0;
+        await _auditLogService.LogActionAsync(parsedId, "ScanSingleApi", $"Successfully scanned {apiUrl}" + (method != null ? $" ({method})" : ""), startTime);
+        await _notificationService.SendNotificationAsync(userId, "API Scan", $"Successfully scanned {apiUrl}" + (method != null ? $" ({method})" : ""), HttpContext);
 
-            return Ok(result);
-        }
-        catch (HttpRequestException ex)
+        _logger.LogInformation($"Completed single scan for {apiUrl} by userId: {userId}" + (method != null ? $" with method: {method}" : ""));
+        return Ok(new
         {
-            await hubContext.Clients.User(userId).SendAsync("ReceiveNotification", $"Scan failed: {ex.Message}");
-            await auditLogService.LogActionAsync(int.Parse(userId), "ScanSingleApiFailed", $"Failed to scan {apiUrl}: {ex.Message}", startTime);
-            await notificationService.SendNotificationAsync(userId, "Scan Failed", $"Failed to scan {apiUrl}: {ex.Message}", HttpContext);
-            
-            return StatusCode(500, new { message = $"Scan failed: {ex.Message}" });
-        }
-        catch (Exception ex)
-        {
-            await hubContext.Clients.User(userId).SendAsync("ReceiveNotification", $"Unexpected error: {ex.Message}");
-            await auditLogService.LogActionAsync(int.Parse(userId), "ScanSingleApiFailed", $"Failed to scan {apiUrl}: {ex.Message}", startTime);
-            await notificationService.SendNotificationAsync(userId, "Scan Failed", $"Failed to scan {apiUrl}: {ex.Message}", HttpContext);
-            
-            return StatusCode(500, new { message = $"Scan failed: {ex.Message}" });
-        }
+            message = "Scan completed successfully",
+            totalResponseTime = metrics.AverageResponseTime.TotalMilliseconds,
+            errorsCount = metrics.ErrorsCount,
+        });
+    }
+    catch (Exception ex)
+    {
+        int parsedId = int.TryParse(userId, out int id) ? id : 0;
+        _logger.LogError(ex, $"Single scan failed for {apiUrl} by userId: {userId}" + (method != null ? $" with method: {method}" : ""));
+        await _hubContext.Clients.User(userId).SendAsync("ReceiveNotification", $"[{DateTime.UtcNow:O}] Scan failed: {ex.Message}");
+        await _auditLogService.LogActionAsync(parsedId, "ScanSingleApiFailed", $"Failed to scan {apiUrl}: {ex.Message}" + (method != null ? $" ({method})" : ""), startTime);
+        await _notificationService.SendNotificationAsync(userId, "Scan Failed", $"Failed to scan {apiUrl}: {ex.Message}" + (method != null ? $" ({method})" : ""), HttpContext);
+
+        return StatusCode(500, new { message = $"Scan failed: {ex.Message}" });
+
+        }    
     }
 }

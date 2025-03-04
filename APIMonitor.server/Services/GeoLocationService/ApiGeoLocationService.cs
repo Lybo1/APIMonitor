@@ -1,35 +1,39 @@
-using System.Text.Json;
-using APIMonitor.server.Models;
+using MaxMind.GeoIP2; // For CityReader
+using System.Net; // For IPAddress
+using APIMonitor.server.Models; // For your AuditLog model (assumed)
+using MaxMind.GeoIP2.Responses; // For CityResponse
 
 namespace APIMonitor.server.Services.GeoLocationService;
 
 public class ApiGeoLocationService : IGeoLocationService
 {
-    private readonly HttpClient httpClient;
-    private const string ApiKey = "405bf98a5dbb63";
+    private readonly string databasePath;
 
-    public ApiGeoLocationService(HttpClient httpClient)
+    public ApiGeoLocationService(string path)
     {
-        this.httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        this.databasePath = path ?? throw new ArgumentNullException(nameof(path));
     }
 
-    public async Task<IpGeolocation> GetLocationAsync(string ipAddress)
+    public (string country, string city, double? latitude, double? longitude, string timeZone) GetGeolocation(string ipAddress)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(ipAddress, "Invalid IPv4 address.");
-        
-        string requestUrl = $"https://ipinfo.io/{ipAddress}/json?token={ApiKey}";
-        
-        HttpResponseMessage? response = await httpClient.GetAsync(requestUrl);
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            return new IpGeolocation();
+            using (var reader = new City(databasePath)) // Use CityReader, not CityResponse
+            {
+                var response = reader.City(IPAddress.Parse(ipAddress)); // Get CityResponse from CityReader
+                return (
+                    response.Country.Name ?? "Unknown",
+                    response.City.Name ?? "Unknown",
+                    response.Location.Latitude,
+                    response.Location.Longitude,
+                    response.Location.TimeZone ?? "Unknown"
+                );
+            }
         }
-        
-        string responseContent = await response.Content.ReadAsStringAsync();
-
-        IpGeolocation? result = JsonSerializer.Deserialize<IpGeolocation>(responseContent);
-        
-        return result ?? new IpGeolocation();
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Geolocation error for IP {ipAddress}: {ex.Message}");
+            return ("Unknown", "Unknown", null, null, "Unknown");
+        }
     }
 }

@@ -22,10 +22,13 @@ public class ApiScannerService : IApiScannerService
 
     private static readonly AsyncRetryPolicy<HttpResponseMessage> retryPolicy = Policy
         .HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
-        .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), 
+        .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
             (response, timeSpan, retryCount, context) =>
             {
-                Console.WriteLine($"🔄 Retry {retryCount} after {timeSpan.TotalSeconds} seconds.");
+                if (retryCount == 3) // Only log the final failure
+                {
+                    Console.WriteLine($"❌ Final retry failed for {context["apiUrl"]}: {response.Result.StatusCode}");
+                }
             });
 
     private static readonly AsyncTimeoutPolicy<HttpResponseMessage> timeoutPolicy = Policy
@@ -34,22 +37,21 @@ public class ApiScannerService : IApiScannerService
     private static readonly AsyncCircuitBreakerPolicy<HttpResponseMessage> circuitBreakerPolicy = Policy
         .HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
         .CircuitBreakerAsync(
-            handledEventsAllowedBeforeBreaking: 3,  // Allow 3 failures before breaking
-            durationOfBreak: TimeSpan.FromSeconds(20),  // Wait 20 seconds before trying again
+            handledEventsAllowedBeforeBreaking: 3,
+            durationOfBreak: TimeSpan.FromSeconds(20),
             onBreak: (response, breakDelay) =>
             {
-                Console.WriteLine($"🚨 Circuit breaker OPEN for {breakDelay.TotalSeconds} seconds due to failures.");
+                Console.WriteLine($"🚨 Circuit breaker OPEN for {breakDelay.TotalSeconds} seconds.");
             },
             onReset: () =>
             {
-                Console.WriteLine("✅ Circuit breaker RESET: API is now responsive.");
+                Console.WriteLine("✅ Circuit breaker RESET.");
             },
             onHalfOpen: () =>
             {
-                Console.WriteLine("⚠️ Circuit breaker HALF-OPEN: Testing API health.");
+                Console.WriteLine("⚠️ Circuit breaker HALF-OPEN: Testing API.");
             });
 
-    
     public ApiScannerService(
         HttpClient httpClient,
         ApplicationDbContext dbContext,
@@ -66,110 +68,93 @@ public class ApiScannerService : IApiScannerService
 
     public async Task ScanApisAsync()
     {
-        List<string> apiUrls = await dbContext.ApiEndpoints
+        var apiUrls = await dbContext.ApiEndpoints
             .Where(api => api.IsActive)
             .Select(api => api.Url)
             .ToListAsync();
 
-        if (apiUrls.Count == 0)
+        if (!apiUrls.Any())
         {
             logger.LogWarning("⚠️ No active APIs found to scan.");
             await hubContext.Clients.All.SendAsync("ReceiveNotification", "No active APIs to scan.");
             return;
         }
 
-        logger.LogInformation($"🚀 Starting batch scan for {apiUrls.Count} APIs...");
-        await hubContext.Clients.All.SendAsync("ReceiveNotification", $"Starting scan of {apiUrls.Count} APIs...");
+        logger.LogInformation($"🚀 Scanning {apiUrls.Count} APIs...");
+        await hubContext.Clients.All.SendAsync("ReceiveNotification", $"Scanning {apiUrls.Count} APIs...");
 
-        int total = apiUrls.Count;
-        int completed = 0;
-
+        int failedCount = 0;
         List<Task<ApiMetrics>> scanTasks = apiUrls
             .Where(apiUrl => !memoryCache.TryGetValue(apiUrl, out _))
             .Select(async apiUrl =>
             {
                 var metrics = await ScanSingleApiAsync(apiUrl);
-                completed++;
-                await hubContext.Clients.All.SendAsync("ReceiveNotification", $"Scanned {apiUrl} - {completed}/{total} ({(completed * 100 / total)}%)");
+                if (metrics.ErrorsCount > 0) Interlocked.Increment(ref failedCount);
                 return metrics;
             })
             .ToList();
 
-        try
+        await Task.WhenAll(scanTasks);
+
+        if (failedCount > 0)
         {
-            await Task.WhenAll(scanTasks);
-            logger.LogInformation($"✅ Batch API scan completed successfully.");
-            await hubContext.Clients.All.SendAsync("ReceiveNotification", "Scan completed successfully.");
+            logger.LogError($"❌ {failedCount} APIs failed.");
+            await hubContext.Clients.All.SendAsync("ReceiveNotification", $"{failedCount} APIs failed.");
         }
-        catch (Exception ex)
+        else
         {
-            logger.LogError($"❌ Error during batch API scan: {ex.Message}");
-            await hubContext.Clients.All.SendAsync("ReceiveNotification", $"Scan failed: {ex.Message}");
+            logger.LogInformation("✅ All APIs scanned successfully.");
+            await hubContext.Clients.All.SendAsync("ReceiveNotification", "All APIs scanned successfully.");
         }
     }
 
-    public async Task<ApiMetrics> ScanSingleApiAsync(string apiUrl)
+    public async Task<ApiMetrics> ScanSingleApiAsync(string apiUrl, string? method = "GET", string? apiKey = null)
+{
+    if (string.IsNullOrWhiteSpace(apiUrl))
+        throw new ArgumentException("API URL cannot be empty", nameof(apiUrl));
+
+    if (memoryCache.TryGetValue(apiUrl, out ApiMetrics cachedMetrics))
     {
-        if (string.IsNullOrWhiteSpace(apiUrl))
-        {
-            throw new ArgumentException("API URL cannot be empty", nameof(apiUrl));
-        }
-        
-        if (memoryCache.TryGetValue(apiUrl, out ApiMetrics? cachedMetrics))
-        {
-            logger.LogInformation($"📌 Returning cached metrics for {apiUrl}.");
-            
-            return cachedMetrics!;
-        }
-        
-        Stopwatch stopWatch = Stopwatch.StartNew();
-        HttpResponseMessage? response = null;
-        bool success = false;
-        string responseBody = string.Empty;
-
-        try
-        {
-            response = await circuitBreakerPolicy.ExecuteAsync(() =>
-                retryPolicy.ExecuteAsync(() =>
-                    timeoutPolicy.ExecuteAsync(() => httpClient.GetAsync(apiUrl))));
-            
-            stopWatch.Stop();
-            responseBody = await response.Content.ReadAsStringAsync();
-            success = response.IsSuccessStatusCode;
-        }
-        catch (Exception e)
-        {
-            stopWatch.Stop();
-            logger.LogError($"❌ Error scanning {apiUrl}: {e.Message}");
-        }
-
-        ApiRequestLog apiRequestLog = new()
-        {
-            IpAddress = "N/A",
-            HttpMethod = "GET",
-            StatusCode = response?.StatusCode.GetHashCode() ?? 500,
-            ResponseTime = stopWatch.Elapsed,
-            Endpoint = apiUrl,
-            RequestPayload = "N/A",
-            ResponsePayload = responseBody
-        };
-
-        await dbContext.ApiRequestLogs.AddAsync(apiRequestLog);
-        await dbContext.SaveChangesAsync();
-
-        ApiMetrics apiMetrics = new()
-        {
-            TotalRequests = 1,
-            RequestsPerMinute = 1,
-            AverageResponseTime = stopWatch.Elapsed,
-            ErrorsCount = success ? 0 : 1,
-        };
-        
-        memoryCache.Set(apiUrl, apiMetrics, TimeSpan.FromMinutes(5));
-        
-        await dbContext.ApiMetrics.AddAsync(apiMetrics);
-        await dbContext.SaveChangesAsync();
-
-        return apiMetrics;
+        logger.LogInformation($"📌 Returning cached metrics for {apiUrl}.");
+        return cachedMetrics;
     }
+
+    Stopwatch stopwatch = Stopwatch.StartNew();
+    HttpResponseMessage response = null;
+    bool success = false;
+    string responseBody = string.Empty;
+    string responseHeaders = string.Empty;
+
+    try
+    {
+        var request = new HttpRequestMessage(new HttpMethod(method ?? "GET"), apiUrl);
+        if (!string.IsNullOrEmpty(apiKey))
+            request.Headers.Add("Authorization", $"Bearer {apiKey}");
+
+        response = await circuitBreakerPolicy.ExecuteAsync(() =>
+            retryPolicy.ExecuteAsync(() =>
+                timeoutPolicy.ExecuteAsync(() => httpClient.SendAsync(request))));
+
+        stopwatch.Stop();
+        responseBody = await response.Content.ReadAsStringAsync();
+        responseHeaders = string.Join(", ", response.Headers.Select(h => $"{h.Key}: {string.Join(", ", h.Value)}"));
+        success = response.IsSuccessStatusCode;
+    }
+    catch (Exception e)
+    {
+        stopwatch.Stop();
+        logger.LogError($"❌ Error scanning {apiUrl}: {e.Message}");
+    }
+
+    var apiMetrics = new ApiMetrics
+    {
+        TotalRequests = 1,
+        RequestsPerMinute = 1,
+        AverageResponseTime = stopwatch.Elapsed,
+        ErrorsCount = success ? 0 : 1,
+    };
+
+    memoryCache.Set(apiUrl, apiMetrics, TimeSpan.FromMinutes(5));
+    return apiMetrics;
+}
 }

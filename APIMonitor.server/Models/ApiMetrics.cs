@@ -23,4 +23,7 @@ public class ApiMetrics
     [Required]
     [Range(0, int.MaxValue, ErrorMessage = "Error count must be a positive number.")]
     public int ErrorsCount { get; set; }
+    
+    [Required]
+    public string Endpoint { get; set; } = string.Empty;
 }

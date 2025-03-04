@@ -42,7 +42,7 @@ public class AuditLogService : IAuditLogService
         string ipv6Address = GetIpAddress(context, AddressFamily.InterNetworkV6) ?? "unknown";
         string userAgent = GetUserAgent(context);
         
-        IpGeolocation location = await geoLocationService.GetLocationAsync(ipv4Address);
+        (string country, string city, double? latitude, double? longitude, string timeZone) location = geoLocationService.GetGeolocation(ipv4Address);
         
         long responseTimeMs = (long)(DateTime.UtcNow - requestStartTime).TotalMilliseconds;
 
@@ -51,10 +51,9 @@ public class AuditLogService : IAuditLogService
             UserId = userId,
             Ipv4Address = ipv4Address,
             Ipv6Address = ipv6Address,
-            MacAddress = macAddress ?? "unknown",
             UserAgent = userAgent,
             Action = action,
-            Details = $"{details} | Location: {location.City}, {location.Country} | Latitude: {location.Latitude}, Longitude: {location.Longitude}",
+            Details = $"{details} | Location: {location.city}, {location.country} | Latitude: {location.latitude}, Longitude: {location.longitude}",
             RequestTimestamp = requestStartTime,
             ResponseTimeMs = responseTimeMs,
             Date = DateTime.UtcNow
@@ -94,24 +93,19 @@ public class AuditLogService : IAuditLogService
         }
         
         dbContext.AuditLogs.Remove(log);
-        
         await dbContext.SaveChangesAsync();
-        
         return true;
     }
 
     public async Task<bool> PurgeAuditLogsAsync()
     {
         await dbContext.Database.ExecuteSqlRawAsync("DELETE FROM AuditLogs");
-        
         return true;
     }
 
     private static string? GetIpAddress(HttpContext context, AddressFamily family)
     {
-        return context.Connection.RemoteIpAddress is { } ipAddress && ipAddress.AddressFamily == family 
-            ? ipAddress.ToString() 
-            : null;
+        return context.Connection.RemoteIpAddress is { } ipAddress && ipAddress.AddressFamily == family ? ipAddress.ToString() : null;
     }
 
     private static string GetUserAgent(HttpContext context)

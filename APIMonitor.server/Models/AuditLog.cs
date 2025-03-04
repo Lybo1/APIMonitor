@@ -22,10 +22,6 @@ public class AuditLog
     public string Ipv6Address { get; set; } = null!;
     
     [Required]
-    [StringLength(Constants.MacAddressLength, ErrorMessage = "MAC address cannot exceed 50 characters.")]
-    public string MacAddress { get; set; } = null!;
-    
-    [Required]
     [StringLength(500, ErrorMessage = "User-Agent cannot exceed 500 characters.")]
     public string UserAgent { get; set; } = "Unknown";
     
@@ -47,6 +43,12 @@ public class AuditLog
     [Required]
     [DataType(DataType.DateTime)]
     public DateTime RequestTimestamp { get; set; } = DateTime.UtcNow;
+    
+    public string Country { get; set; }
+    public string City { get; set; }
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
+    public string TimeZone { get; set; }
     
     public virtual User User { get; set; } = null!;
 }

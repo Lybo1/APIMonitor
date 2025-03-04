@@ -185,6 +185,10 @@ namespace APIMonitor.server.Migrations
                     b.Property<TimeSpan>("AverageResponseTime")
                         .HasColumnType("time");
 
+                    b.Property<string>("Endpoint")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("ErrorsCount")
                         .HasColumnType("int");
 

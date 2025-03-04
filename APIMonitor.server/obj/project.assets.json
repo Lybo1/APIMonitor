@@ -295,6 +295,36 @@
           }
         }
       },
+      "MaxMind.Db/4.1.0": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/MaxMind.Db.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/MaxMind.Db.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "MaxMind.GeoIP2/5.2.0": {
+        "type": "package",
+        "dependencies": {
+          "MaxMind.Db": "4.1.0",
+          "Microsoft.Extensions.Options": "8.0.0"
+        },
+        "compile": {
+          "lib/net8.0/MaxMind.GeoIP2.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/MaxMind.GeoIP2.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.ApplicationInsights/2.22.0": {
         "type": "package",
         "dependencies": {
@@ -4497,6 +4527,52 @@
         "lib/netstandard2.1/MailKit.xml",
         "mailkit.4.10.0.nupkg.sha512",
         "mailkit.nuspec"
+      ]
+    },
+    "MaxMind.Db/4.1.0": {
+      "sha512": "lEjCFX0TUQCRmFS8xrXIQSi+4omJ1Fwy0gAHlbnjg8cgSBa0cllP5zOEftQ23EP247EbnF7mNCQ3JsG/bMkHAA==",
+      "type": "package",
+      "path": "maxmind.db/4.1.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "MaxMind-logo.png",
+        "README.md",
+        "lib/net6.0/MaxMind.Db.dll",
+        "lib/net6.0/MaxMind.Db.xml",
+        "lib/net7.0/MaxMind.Db.dll",
+        "lib/net7.0/MaxMind.Db.xml",
+        "lib/net8.0/MaxMind.Db.dll",
+        "lib/net8.0/MaxMind.Db.xml",
+        "lib/netstandard2.0/MaxMind.Db.dll",
+        "lib/netstandard2.0/MaxMind.Db.xml",
+        "lib/netstandard2.1/MaxMind.Db.dll",
+        "lib/netstandard2.1/MaxMind.Db.xml",
+        "maxmind.db.4.1.0.nupkg.sha512",
+        "maxmind.db.nuspec"
+      ]
+    },
+    "MaxMind.GeoIP2/5.2.0": {
+      "sha512": "E8i6yQPlAznLTfS8w208uY3oqCg6i7sQ9cxKmlDdhFMXVLfm4sKphOTMsIWdAHJCV7RxW2a3DlqxAPkQrqmqlA==",
+      "type": "package",
+      "path": "maxmind.geoip2/5.2.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "MaxMind-logo.png",
+        "README.md",
+        "lib/net6.0/MaxMind.GeoIP2.dll",
+        "lib/net6.0/MaxMind.GeoIP2.xml",
+        "lib/net7.0/MaxMind.GeoIP2.dll",
+        "lib/net7.0/MaxMind.GeoIP2.xml",
+        "lib/net8.0/MaxMind.GeoIP2.dll",
+        "lib/net8.0/MaxMind.GeoIP2.xml",
+        "lib/netstandard2.0/MaxMind.GeoIP2.dll",
+        "lib/netstandard2.0/MaxMind.GeoIP2.xml",
+        "lib/netstandard2.1/MaxMind.GeoIP2.dll",
+        "lib/netstandard2.1/MaxMind.GeoIP2.xml",
+        "maxmind.geoip2.5.2.0.nupkg.sha512",
+        "maxmind.geoip2.nuspec"
       ]
     },
     "Microsoft.ApplicationInsights/2.22.0": {
@@ -10965,6 +11041,7 @@
       "FluentValidation.AspNetCore >= 11.3.0",
       "IPinfo >= 3.0.1",
       "MailKit >= 4.10.0",
+      "MaxMind.GeoIP2 >= 5.2.0",
       "Microsoft.ApplicationInsights.AspNetCore >= 2.22.0",
       "Microsoft.AspNetCore.Authentication >= 2.3.0",
       "Microsoft.AspNetCore.Authentication.Cookies >= 2.3.0",
@@ -11006,19 +11083,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\hrist\\.nuget\\packages\\": {}
+    "/home/lyuboslav/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\hrist\\WebstormProjects\\APIMonitor\\APIMonitor.server\\APIMonitor.server.csproj",
+      "projectUniqueName": "/home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/APIMonitor.server.csproj",
       "projectName": "APIMonitor.server",
-      "projectPath": "C:\\Users\\hrist\\WebstormProjects\\APIMonitor\\APIMonitor.server\\APIMonitor.server.csproj",
-      "packagesPath": "C:\\Users\\hrist\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\hrist\\WebstormProjects\\APIMonitor\\APIMonitor.server\\obj\\",
+      "projectPath": "/home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/APIMonitor.server.csproj",
+      "packagesPath": "/home/lyuboslav/.nuget/packages/",
+      "outputPath": "/home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\hrist\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "/home/lyuboslav/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
@@ -11042,7 +11119,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.200"
+      "SdkAnalysisLevel": "9.0.100"
     },
     "frameworks": {
       "net9.0": {
@@ -11087,6 +11164,10 @@
           "MailKit": {
             "target": "Package",
             "version": "[4.10.0, )"
+          },
+          "MaxMind.GeoIP2": {
+            "target": "Package",
+            "version": "[5.2.0, )"
           },
           "Microsoft.ApplicationInsights.AspNetCore": {
             "target": "Package",
@@ -11260,6 +11341,12 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
+        "downloadDependencies": [
+          {
+            "name": "Microsoft.AspNetCore.App.Ref",
+            "version": "[9.0.1, 9.0.1]"
+          }
+        ],
         "frameworkReferences": {
           "Microsoft.AspNetCore.App": {
             "privateAssets": "none"
@@ -11268,7 +11355,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.200/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.102/PortableRuntimeIdentifierGraph.json"
       }
     }
   },

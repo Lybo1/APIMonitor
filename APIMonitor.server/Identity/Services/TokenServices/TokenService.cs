@@ -111,7 +111,6 @@ public class TokenService : ITokenService
             new Claim(JwtRegisteredClaimNames.Jti, jti)
         };
 
-        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
         SymmetricSecurityKey key = GetSecurityKey();
         SigningCredentials credentials = new(key, SecurityAlgorithms.HmacSha256);

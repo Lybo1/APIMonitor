@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\hrist\\WebstormProjects\\APIMonitor\\APIMonitor.server\\APIMonitor.server.csproj": {}
+    "/home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/APIMonitor.server.csproj": {}
   },
   "projects": {
-    "C:\\Users\\hrist\\WebstormProjects\\APIMonitor\\APIMonitor.server\\APIMonitor.server.csproj": {
+    "/home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/APIMonitor.server.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\hrist\\WebstormProjects\\APIMonitor\\APIMonitor.server\\APIMonitor.server.csproj",
+        "projectUniqueName": "/home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/APIMonitor.server.csproj",
         "projectName": "APIMonitor.server",
-        "projectPath": "C:\\Users\\hrist\\WebstormProjects\\APIMonitor\\APIMonitor.server\\APIMonitor.server.csproj",
-        "packagesPath": "C:\\Users\\hrist\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\hrist\\WebstormProjects\\APIMonitor\\APIMonitor.server\\obj\\",
+        "projectPath": "/home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/APIMonitor.server.csproj",
+        "packagesPath": "/home/lyuboslav/.nuget/packages/",
+        "outputPath": "/home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\hrist\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "/home/lyuboslav/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
@@ -38,7 +38,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.200"
+        "SdkAnalysisLevel": "9.0.100"
       },
       "frameworks": {
         "net9.0": {
@@ -83,6 +83,10 @@
             "MailKit": {
               "target": "Package",
               "version": "[4.10.0, )"
+            },
+            "MaxMind.GeoIP2": {
+              "target": "Package",
+              "version": "[5.2.0, )"
             },
             "Microsoft.ApplicationInsights.AspNetCore": {
               "target": "Package",
@@ -256,6 +260,12 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[9.0.1, 9.0.1]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.AspNetCore.App": {
               "privateAssets": "none"
@@ -264,7 +274,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.200/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.102/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
