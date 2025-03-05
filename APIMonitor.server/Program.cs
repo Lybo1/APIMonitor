@@ -17,9 +17,7 @@ using APIMonitor.server.Identity.Services.RoleServices;
 using APIMonitor.server.Identity.Services.TokenServices;
 using APIMonitor.server.Middleware;
 using APIMonitor.server.Services.AuditLogService;
-using APIMonitor.server.Services.GeoLocationService;
 using APIMonitor.server.Services.IpBlockService;
-using APIMonitor.server.Services.MacAddressService;
 using APIMonitor.server.Services.NotificationsService;
 using APIMonitor.server.Services.RateLimitService;
 
@@ -39,7 +37,7 @@ internal class Program
 
         string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-        builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
+        builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString).EnableSensitiveDataLogging());
 
         builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
         {
@@ -88,7 +86,6 @@ internal class Program
         });
         builder.Services.AddMemoryCache();
 
-        // Add HTTP client without Polly retry policy
         builder.Services.AddHttpClient<IApiScannerService, ApiScannerService>("ApiScannerClient");
 
         builder.Services.AddCors(options =>
@@ -108,11 +105,8 @@ internal class Program
 
         builder.Services.AddDataProtection();
 
-        // builder.Services.AddHttpClient<IGeoLocationService, ApiGeoLocationService>();
         builder.Services.AddScoped<IAuditLogService, AuditLogService>();
-        // builder.Services.AddScoped<IGeoLocationService, ApiGeoLocationService>();
         builder.Services.AddScoped<IIpBlockService, IpBlockService>();
-        builder.Services.AddScoped<IMacAddressService, MacAddressService>();
         builder.Services.AddScoped<INotificationService, NotificationService>();
         builder.Services.AddScoped<IRateLimitService, RateLimitService>();
         builder.Services.AddScoped<RoleManager<IdentityRole<int>>>();

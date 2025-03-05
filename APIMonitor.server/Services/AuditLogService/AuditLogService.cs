@@ -1,8 +1,6 @@
 using System.Net.Sockets;
 using APIMonitor.server.Data;
 using APIMonitor.server.Models;
-using APIMonitor.server.Services.GeoLocationService;
-using APIMonitor.server.Services.MacAddressService;
 using Microsoft.EntityFrameworkCore;
 
 namespace APIMonitor.server.Services.AuditLogService;
@@ -10,19 +8,13 @@ namespace APIMonitor.server.Services.AuditLogService;
 public class AuditLogService : IAuditLogService
 {
     private readonly ApplicationDbContext dbContext;
-    private readonly IMacAddressService macAddressService;
-    private readonly IGeoLocationService geoLocationService;
     private readonly IHttpContextAccessor httpContextAccessor;
 
     public AuditLogService(ApplicationDbContext dbContext, 
-                           IMacAddressService macAddressService, 
-                           IHttpContextAccessor httpContextAccessor, 
-                           IGeoLocationService geoLocationService)
+                           IHttpContextAccessor httpContextAccessor)
     {
         this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-        this.macAddressService = macAddressService ?? throw new ArgumentNullException(nameof(macAddressService));
         this.httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
-        this.geoLocationService = geoLocationService ?? throw new ArgumentNullException(nameof(geoLocationService));
     }
 
     public async Task LogActionAsync(int userId, string action, string details, DateTime requestStartTime)
@@ -37,12 +29,9 @@ public class AuditLogService : IAuditLogService
             throw new InvalidOperationException("HttpContext is not available.");
         }
         
-        string? macAddress = await macAddressService.GetMacAddressAsync(context);
         string ipv4Address = GetIpAddress(context, AddressFamily.InterNetwork) ?? "unknown";
         string ipv6Address = GetIpAddress(context, AddressFamily.InterNetworkV6) ?? "unknown";
         string userAgent = GetUserAgent(context);
-        
-        (string country, string city, double? latitude, double? longitude, string timeZone) location = geoLocationService.GetGeolocation(ipv4Address);
         
         long responseTimeMs = (long)(DateTime.UtcNow - requestStartTime).TotalMilliseconds;
 
@@ -53,7 +42,7 @@ public class AuditLogService : IAuditLogService
             Ipv6Address = ipv6Address,
             UserAgent = userAgent,
             Action = action,
-            Details = $"{details} | Location: {location.city}, {location.country} | Latitude: {location.latitude}, Longitude: {location.longitude}",
+            Details = details,
             RequestTimestamp = requestStartTime,
             ResponseTimeMs = responseTimeMs,
             Date = DateTime.UtcNow
@@ -86,12 +75,7 @@ public class AuditLogService : IAuditLogService
     public async Task<bool> DeleteAuditLogAsync(int id)
     {
         AuditLog? log = await dbContext.AuditLogs.FindAsync(id);
-
-        if (log is null)
-        {
-            return false;
-        }
-        
+        if (log is null) return false;
         dbContext.AuditLogs.Remove(log);
         await dbContext.SaveChangesAsync();
         return true;

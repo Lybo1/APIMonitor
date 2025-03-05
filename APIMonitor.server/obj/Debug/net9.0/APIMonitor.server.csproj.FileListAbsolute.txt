@@ -421,6 +421,7 @@ C:/Users/hrist/WebstormProjects/APIMonitor/APIMonitor.server/obj/Debug/net9.0/re
 /home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/bin/Debug/net9.0/appsettings.Development.json
 /home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/bin/Debug/net9.0/appsettings.json
 /home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/bin/Debug/net9.0/APIMonitor.server.staticwebassets.endpoints.json
+/home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/bin/Debug/net9.0/Resources/GeoLite2-City.mmdb
 /home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/bin/Debug/net9.0/APIMonitor.server
 /home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/bin/Debug/net9.0/APIMonitor.server.deps.json
 /home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/bin/Debug/net9.0/APIMonitor.server.runtimeconfig.json
@@ -444,6 +445,8 @@ C:/Users/hrist/WebstormProjects/APIMonitor/APIMonitor.server/obj/Debug/net9.0/re
 /home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/bin/Debug/net9.0/Humanizer.dll
 /home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/bin/Debug/net9.0/IPinfo.dll
 /home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/bin/Debug/net9.0/MailKit.dll
+/home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/bin/Debug/net9.0/MaxMind.Db.dll
+/home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/bin/Debug/net9.0/MaxMind.GeoIP2.dll
 /home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/bin/Debug/net9.0/Microsoft.ApplicationInsights.dll
 /home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/bin/Debug/net9.0/Microsoft.ApplicationInsights.AspNetCore.dll
 /home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/bin/Debug/net9.0/Microsoft.AI.DependencyCollector.dll
@@ -674,6 +677,3 @@ C:/Users/hrist/WebstormProjects/APIMonitor/APIMonitor.server/obj/Debug/net9.0/re
 /home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/obj/Debug/net9.0/APIMonitor.server.pdb
 /home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/obj/Debug/net9.0/APIMonitor.server.genruntimeconfig.cache
 /home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/obj/Debug/net9.0/ref/APIMonitor.server.dll
-/home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/bin/Debug/net9.0/Resources/GeoLite2-City.mmdb
-/home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/bin/Debug/net9.0/MaxMind.Db.dll
-/home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/bin/Debug/net9.0/MaxMind.GeoIP2.dll

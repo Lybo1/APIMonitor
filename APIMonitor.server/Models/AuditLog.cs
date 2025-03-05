@@ -44,11 +44,5 @@ public class AuditLog
     [DataType(DataType.DateTime)]
     public DateTime RequestTimestamp { get; set; } = DateTime.UtcNow;
     
-    public string Country { get; set; }
-    public string City { get; set; }
-    public double? Latitude { get; set; }
-    public double? Longitude { get; set; }
-    public string TimeZone { get; set; }
-    
     public virtual User User { get; set; } = null!;
 }
