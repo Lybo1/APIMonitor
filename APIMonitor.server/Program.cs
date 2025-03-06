@@ -1,25 +1,29 @@
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.IdentityModel.Tokens;
-using Serilog;
-using APIMonitor.server.Data;
-using APIMonitor.server.Identity;
-using APIMonitor.server.Services.ApiScannerService;
-using APIMonitor.server.Services.ThreatDetectionService;
-using Microsoft.OpenApi.Models;
+using System.Diagnostics;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.RateLimiting;
+using APIMonitor.server.Data;
 using APIMonitor.server.Hubs;
+using APIMonitor.server.Identity;
 using APIMonitor.server.Identity.Services.RoleServices;
 using APIMonitor.server.Identity.Services.TokenServices;
 using APIMonitor.server.Middleware;
+using APIMonitor.server.Services.ApiScannerService;
 using APIMonitor.server.Services.AuditLogService;
 using APIMonitor.server.Services.IpBlockService;
 using APIMonitor.server.Services.NotificationsService;
 using APIMonitor.server.Services.RateLimitService;
+using APIMonitor.server.Services.ThreatDetectionService;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using Serilog;
+using SharpPcap;
+
+namespace APIMonitor.server;
 
 internal class Program
 {
@@ -34,48 +38,84 @@ internal class Program
             .CreateLogger();
 
         builder.Host.UseSerilog();
+        
+        builder.Services.AddLogging(logging => logging.AddSerilog());
+
+        builder.Services.AddSingleton<ICaptureDevice>(provider =>
+        {
+            CaptureDeviceList? devices = CaptureDeviceList.Instance;
+
+            if (devices.Count == 0)
+            {
+                throw new InvalidOperationException("No capture devices found on this machine.");
+            }
+            
+            ILiveDevice? device = devices[0];
+
+            return device;
+        });
+        
+        builder.Services.AddHttpClient<IApiScannerService, ApiScannerService>()
+            .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+            {
+                ConnectCallback = async (context, cancellationToken) =>
+                {
+                    Stopwatch dnsStopWatch = Stopwatch.StartNew();
+                    IPAddress[] addresses = await Dns.GetHostAddressesAsync(context.DnsEndPoint.Host, cancellationToken);
+                    dnsStopWatch.Stop();
+                    context.InitialRequestMessage.Headers.Add("X-Dns-Time", dnsStopWatch.ElapsedMilliseconds.ToString());
+                    
+                    Stopwatch connectWatch = Stopwatch.StartNew();
+                    Socket socket = new(SocketType.Stream, ProtocolType.Tcp);
+                    await socket.ConnectAsync(addresses, context.DnsEndPoint.Port, cancellationToken);
+                    connectWatch.Stop();
+                    context.InitialRequestMessage.Headers.Add("X-Connect-Time", connectWatch.ElapsedMilliseconds.ToString());
+                    
+                    return new NetworkStream(socket, true);
+                }
+            });
 
         string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
         builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString).EnableSensitiveDataLogging());
 
         builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
-        {
-            options.SignIn.RequireConfirmedAccount = false;
-            options.User.RequireUniqueEmail = true;
-            options.Password.RequireDigit = true;
-            options.Password.RequireLowercase = true;
-            options.Password.RequireUppercase = true;
-            options.Password.RequireNonAlphanumeric = true;
-            options.Password.RequiredLength = 6;
-            options.Password.RequiredUniqueChars = 1;
-        })
-        .AddEntityFrameworkStores<ApplicationDbContext>()
-        .AddDefaultTokenProviders();
+            {
+                options.SignIn.RequireConfirmedAccount = false;
+                options.User.RequireUniqueEmail = true;
+                options.Password.RequireDigit = true;
+                options.Password.RequireLowercase = true;
+                options.Password.RequireUppercase = true;
+                options.Password.RequireNonAlphanumeric = true;
+                options.Password.RequiredLength = 6;
+                options.Password.RequiredUniqueChars = 1;
+            })
+            .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddDefaultTokenProviders();
 
         builder.Services.AddAuthentication(options =>
-        {
-            options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-        })
-        .AddCookie(options =>
-        {
-            options.Cookie.HttpOnly = true;
-            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-            options.Cookie.SameSite = SameSiteMode.None;
-        })
-        .AddJwtBearer(options =>
-        {
-            options.TokenValidationParameters = new TokenValidationParameters
             {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                ValidIssuer = builder.Configuration["Jwt:Issuer"],
-                ValidAudience = builder.Configuration["Jwt:Audience"],
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
-            };
-        });
+                options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            })
+            .AddCookie(options =>
+            {
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                options.Cookie.SameSite = SameSiteMode.None;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                    ValidAudience = builder.Configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+                };
+            });
 
         builder.Services.AddControllers();
         builder.Services.AddSignalR(options =>
@@ -86,31 +126,30 @@ internal class Program
         });
         builder.Services.AddMemoryCache();
 
-        builder.Services.AddHttpClient<IApiScannerService, ApiScannerService>("ApiScannerClient");
-
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("AllowFrontend", policy =>
             {
                 policy.WithOrigins("http://localhost:5173")
-                      .AllowAnyHeader()
-                      .AllowAnyMethod()
-                      .AllowCredentials();
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
             });
         });
 
         builder.Services.AddScoped<IRoleService, RoleService>();
         builder.Services.AddScoped<ITokenService, TokenService>();
         builder.Services.AddScoped<IApiScannerService, ApiScannerService>();
-
-        builder.Services.AddDataProtection();
-
         builder.Services.AddScoped<IAuditLogService, AuditLogService>();
         builder.Services.AddScoped<IIpBlockService, IpBlockService>();
         builder.Services.AddScoped<INotificationService, NotificationService>();
         builder.Services.AddScoped<IRateLimitService, RateLimitService>();
         builder.Services.AddScoped<RoleManager<IdentityRole<int>>>();
         builder.Services.AddScoped<IThreatDetectionService, ThreatDetectionService>();
+        
+        builder.Services.AddDataProtection();
+
+        builder.Services.AddAutoMapper(typeof(Program));
 
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(options =>

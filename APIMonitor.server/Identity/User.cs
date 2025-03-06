@@ -31,7 +31,7 @@ public class User : IdentityUser<int>
     
     [Required(ErrorMessage = "Refresh token expiry date is required.")]
     [DataType(DataType.DateTime)]
-    public DateTime RefreshTokenExpiry { get; set; }
+    public DateTimeOffset RefreshTokenExpiry { get; set; }
 
     [Range(0, 3, ErrorMessage = "Failed login attempts cannot be negative.")]
     public int FailedLoginAttempts { get; set; } = 0;

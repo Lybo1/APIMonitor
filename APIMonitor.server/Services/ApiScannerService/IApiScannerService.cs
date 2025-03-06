@@ -5,7 +5,5 @@ namespace APIMonitor.server.Services.ApiScannerService;
 
 public interface IApiScannerService
 {
-    Task ScanApisAsync();
-
     Task<(ApiMetrics Metrics, HttpStatusCode StatusCode, string ResponseSnippet)> ScanSingleApiAsync(string apiUrl, string? method = "GET", string? apiKey = null, string? userId = null, bool forceRefresh = false);
 }

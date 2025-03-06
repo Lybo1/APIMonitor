@@ -4,279 +4,219 @@ using System.Net.Http;
 using APIMonitor.server.Data;
 using APIMonitor.server.Hubs;
 using APIMonitor.server.Models;
+using AutoMapper;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Memory;
+using Org.BouncyCastle.Bcpg;
+using PacketDotNet;
 using Polly;
 using Polly.CircuitBreaker;
 using Polly.Retry;
 using Polly.Timeout;
+using SharpPcap;
+using Packet = PacketDotNet.Packet;
 
 namespace APIMonitor.server.Services.ApiScannerService;
 
 public class ApiScannerService : IApiScannerService
 {
-    private readonly HttpClient _httpClient;
-    private readonly ApplicationDbContext _dbContext;
-    private readonly IMemoryCache _memoryCache;
-    private readonly ILogger<ApiScannerService> _logger;
-    private readonly IHubContext<NotificationHub> _hubContext;
-
-    private static readonly AsyncRetryPolicy<HttpResponseMessage> _retryPolicy = Policy
-        .HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
-        .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
-            async (response, timeSpan, retryCount, context) =>
-            {
-                string apiUrl = context["apiUrl"]?.ToString() ?? "unknown";
-                string userId = context["userId"]?.ToString();
-                if (userId != null)
-                {
-                    await context["hubContext"]?.As<IHubContext<NotificationHub>>()
-                        .Clients.User(userId)
-                        .SendAsync("ReceiveNotification",
-                            $"[{DateTime.UtcNow:O}] Retry {retryCount}/3 after {timeSpan.TotalSeconds}s for {apiUrl}: {(int)response.Result.StatusCode} {response.Result.StatusCode}");
-                }
-                if (retryCount == 3)
-                {
-                    Console.WriteLine($"❌ Final retry failed for {apiUrl}: {response.Result.StatusCode}");
-                }
-            });
-
-    private static readonly AsyncTimeoutPolicy<HttpResponseMessage> _timeoutPolicy = Policy
-        .TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(5), TimeoutStrategy.Pessimistic,
-            async (context, timeSpan, task) =>
-            {
-                string userId = context["userId"]?.ToString();
-                if (userId != null)
-                {
-                    await context["hubContext"]?.As<IHubContext<NotificationHub>>()
-                        .Clients.User(userId)
-                        .SendAsync("ReceiveNotification",
-                            $"[{DateTime.UtcNow:O}] Timeout after {timeSpan.TotalSeconds}s for {context["apiUrl"]}");
-                }
-            });
-
-    private static readonly AsyncCircuitBreakerPolicy<HttpResponseMessage> _circuitBreakerPolicy = Policy
-        .HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
-        .CircuitBreakerAsync(
-            handledEventsAllowedBeforeBreaking: 3,
-            durationOfBreak: TimeSpan.FromSeconds(20),
-            onBreak: async (response, breakDelay, context) =>
-            {
-                string userId = context["userId"]?.ToString();
-                if (userId != null)
-                {
-                    await context["hubContext"]?.As<IHubContext<NotificationHub>>()
-                        .Clients.User(userId)
-                        .SendAsync("ReceiveNotification",
-                            $"[{DateTime.UtcNow:O}] Circuit breaker OPEN for {breakDelay.TotalSeconds}s due to repeated failures");
-                }
-                Console.WriteLine($"🚨 Circuit breaker OPEN for {breakDelay.TotalSeconds} seconds.");
-            },
-            onReset: async context =>
-            {
-                string userId = context["userId"]?.ToString();
-                if (userId != null)
-                {
-                    await context["hubContext"]?.As<IHubContext<NotificationHub>>()
-                        .Clients.User(userId)
-                        .SendAsync("ReceiveNotification",
-                            $"[{DateTime.UtcNow:O}] Circuit breaker RESET");
-                }
-                Console.WriteLine("✅ Circuit breaker RESET.");
-            },
-            onHalfOpen: async context =>
-            {
-                string userId = context["userId"]?.ToString();
-                if (userId != null)
-                {
-                    await context["hubContext"]?.As<IHubContext<NotificationHub>>()
-                        .Clients.User(userId)
-                        .SendAsync("ReceiveNotification",
-                            $"[{DateTime.UtcNow:O}] Circuit breaker HALF-OPEN: Testing API");
-                }
-                Console.WriteLine("⚠️ Circuit breaker HALF-OPEN: Testing API.");
-            });
-
+    private readonly HttpClient httpClient;
+    private readonly ICaptureDevice captureDevice;
+    private readonly IMemoryCache memoryCache;
+    private readonly ILogger<ApiScannerService> logger;
+    private readonly IMapper mapper;
+    private readonly Dictionary<string , ApiMetrics> metrics = new();
+    private readonly List<PacketInfo> packets = new();
+    private readonly object packetLock = new();
+    private readonly IHubContext<NotificationHub> hubContext;
+    
     public ApiScannerService(
         HttpClient httpClient,
-        ApplicationDbContext dbContext,
+        ICaptureDevice captureDevice,
         IMemoryCache memoryCache,
         ILogger<ApiScannerService> logger,
+        IMapper mapper,
         IHubContext<NotificationHub> hubContext)
     {
-        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-        _memoryCache = memoryCache ?? throw new ArgumentNullException(nameof(memoryCache));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
+        this.httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        this.captureDevice = captureDevice ?? throw new ArgumentNullException(nameof(captureDevice));
+        this.memoryCache = memoryCache ?? throw new ArgumentNullException(nameof(memoryCache));
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+        this.hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
+        
+        this.captureDevice.OnPacketArrival += CaptureDevice_OnPacketArrival;
     }
 
-    public async Task<(ApiMetrics Metrics, HttpStatusCode StatusCode, string ResponseSnippet)> ScanSingleApiAsync(
-        string apiUrl, string? method = "GET", string? apiKey = null, string? userId = null, bool forceRefresh = false)
+    private void CaptureDevice_OnPacketArrival(object sender, PacketCapture e)
     {
-        if (string.IsNullOrWhiteSpace(apiUrl))
-            throw new ArgumentException("API URL cannot be empty", nameof(apiUrl));
+        RawCapture? rawPacket = e.GetPacket();
+        Packet? packet = Packet.ParsePacket(rawPacket.LinkLayerType, rawPacket.Data);
+        
+        EthernetPacket? ethernetPacket = packet.Extract<EthernetPacket>();
+        IPPacket? ipPacket = packet.Extract<IPPacket>();
+        TcpPacket? tcpPacket = packet.Extract<TcpPacket>();
 
-        if (string.IsNullOrWhiteSpace(method))
-            throw new ArgumentException("HTTP method cannot be empty", nameof(method));
-
-        var context = new Context
+        PacketInfo packetInfo = new()
         {
-            ["apiUrl"] = apiUrl,
-            ["userId"] = userId,
-            ["hubContext"] = _hubContext
+            SourceIp = ipPacket?.SourceAddress.ToString() ?? "Unknown",
+            DestinationIp = ipPacket?.DestinationAddress.ToString() ?? "Unknown",
+            SourceMac = ethernetPacket.SourceHardwareAddress?.ToString() ?? "Unknown",
+            DestinationMac = ethernetPacket.DestinationHardwareAddress?.ToString() ?? "Unknown",
+            Protocol = ipPacket?.Protocol.ToString() ?? "Unknown",
+            Length = rawPacket.Data.Length,
+            Timestamp = rawPacket.Timeval.Date,
+            PayloadPreview = tcpPacket != null && tcpPacket.PayloadData.Length > 0 ? BitConverter.ToString(tcpPacket.PayloadData.Take(16).ToArray()) : "No payload"
         };
 
-        if (!forceRefresh && _memoryCache.TryGetValue(apiUrl, out ApiMetrics cachedMetrics))
+        lock (packetLock)
         {
-            _logger.LogInformation($"📌 Returning cached metrics for {apiUrl}.");
-            if (userId != null)
+            packets.Add(packetInfo);
+        }
+        
+        logger.LogDebug($"Captured packet: {packetInfo.SourceIp} -> {packetInfo.DestinationIp}, {packetInfo.Length} bytes");
+    }
+
+    public async Task<(ApiMetrics Metrics, HttpStatusCode StatusCode, string ResponseSnippet)> ScanSingleApiAsync(string apiUrl, string? method = "GET", string? apiKey = null, string? userId = null, bool forceRefresh = false)
+    {
+        if (!metrics.TryGetValue(apiUrl, out ApiMetrics? metric))
+        {
+            metric = new ApiMetrics
             {
-                await _hubContext.Clients.User(userId).SendAsync("ReceiveNotification",
-                    $"[{DateTime.UtcNow:O}] Using cached metrics for {apiUrl} ({method})");
-                await _hubContext.Clients.User(userId).SendAsync("ReceiveNotification",
-                    $"[{DateTime.UtcNow:O}] Cached result - Total: {cachedMetrics.AverageResponseTime.TotalMilliseconds:F2}ms, Errors: {cachedMetrics.ErrorsCount}");
-            }
-            return (cachedMetrics, HttpStatusCode.OK, "Cached response");
+                Endpoint = apiUrl,
+                TimeStamp = DateTime.UtcNow,
+                TotalRequests = 0,
+                RequestsPerMinute = 1,
+                ErrorsCount = 0
+            };
+            
+            metrics[apiUrl] = metric;
+        }
+        
+        if (!forceRefresh && memoryCache.TryGetValue(apiUrl, out ApiScanResult? cachedResult))
+        {
+            logger.LogInformation($"Returning cached result for {apiUrl}");
+                
+            return (metric, HttpStatusCode.OK, cachedResult!.BodySnippet);
         }
 
+        metric.TotalRequests++;
+        
         Stopwatch stopwatch = Stopwatch.StartNew();
-        HttpResponseMessage response = null;
-        bool success = false;
-        string responseBody = string.Empty;
-        string responseHeaders = string.Empty;
+
+        HttpRequestMessage request = new HttpRequestMessage(new HttpMethod(method!), apiUrl);
+    
+        if (!string.IsNullOrEmpty(apiKey))
+        {
+            request.Headers.Add("Authorization", $"Bearer {apiKey}");
+        }
+        
+        if (!string.IsNullOrEmpty(userId))
+        {
+            request.Headers.Add("X-User-Id", userId);
+        }
+
+        HttpResponseMessage? response = null;
+
+        lock (packetLock)
+        {
+            packets.Clear();
+        }
+        
+        captureDevice.Open();
+        captureDevice.Filter = $"host {new Uri(apiUrl).Host}";
+        captureDevice.StartCapture();
 
         try
         {
-            var request = new HttpRequestMessage(new HttpMethod(method), apiUrl);
-            if (!string.IsNullOrEmpty(apiKey))
-                request.Headers.Add("Authorization", $"Bearer {apiKey}");
+            AsyncTimeoutPolicy<HttpResponseMessage>? timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(10));
+            AsyncRetryPolicy? retryPolicy = Policy.Handle<Exception>().RetryAsync(3, onRetry: (ex, retryCount) => logger.LogWarning($"Retry {retryCount} for {apiUrl} due to {ex.Message}"));
+            
+            AsyncCircuitBreakerPolicy? circuitBreakerPolicy = Policy.Handle<Exception>()
+                .CircuitBreakerAsync(5, TimeSpan.FromMinutes(1),
+                    onBreak: (ex, breakDelay) => logger.LogError($"Circuit breaker opened for {breakDelay} due to {ex.Message}"),
+                    onReset: () => logger.LogInformation("Circuit breaker reset"));
 
-            if (method == "POST" && apiUrl.EndsWith("/api/register/register"))
+            response = await circuitBreakerPolicy.ExecuteAsync(
+                () => retryPolicy.ExecuteAsync(
+                    () => timeoutPolicy.ExecuteAsync(async () =>
+                        await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))));
+
+            stopwatch.Stop();
+            
+            string responseBody = await response.Content.ReadAsStringAsync();
+
+            ApiScanResult detailedResult = new ApiScanResult
             {
-                request.Content = new StringContent(
-                    "{\"email\":\"testuser" + DateTime.UtcNow.Ticks + "@example.com\",\"password\":\"Test123!\",\"confirmPassword\":\"Test123!\",\"rememberMe\":true}",
-                    System.Text.Encoding.UTF8,
-                    "application/json"
-                );
-                if (userId != null)
+                Status = $"{(int)response.StatusCode} {response.StatusCode}",
+                Latency = new LatencyMetrics
                 {
-                    await _hubContext.Clients.User(userId).SendAsync("ReceiveNotification",
-                        $"[{DateTime.UtcNow:O}] Preparing POST body with registration data for {apiUrl}");
-                }
-            }
-            else if (userId != null)
-            {
-                await _hubContext.Clients.User(userId).SendAsync("ReceiveNotification",
-                    $"[{DateTime.UtcNow:O}] Preparing {method} request (no body) for {apiUrl}");
-            }
+                    DnsResolution = "N/A", 
+                    Connect = "N/A",       
+                    TotalRequest = $"{stopwatch.Elapsed.TotalMilliseconds:F2}ms"
+                },
+                Headers = response.Headers.Select(h => $"{h.Key}: {string.Join(", ", h.Value)}").Take(3).ToList(),
+                BodySnippet = responseBody.Length > 0 ? responseBody.Substring(0, Math.Min(100, responseBody.Length)) + "..." : "No body",
+                Health = GetHealthStatus(stopwatch.Elapsed.TotalMilliseconds),
+                ColorHint = GetColorHint(stopwatch.Elapsed.TotalMilliseconds),
+                Packets = new List<PacketInfo>(packets)
+            };
 
-            // Step 1: Notify starting request
-            if (userId != null)
-            {
-                await _hubContext.Clients.User(userId).SendAsync("ReceiveNotification",
-                    $"[{DateTime.UtcNow:O}] Starting HTTP {method} request to {apiUrl}");
-            }
+            long totalMs = (long)metric.AverageResponseTime.TotalMilliseconds * (metric.TotalRequests - 1) + stopwatch.ElapsedMilliseconds;
+            metric.AverageResponseTime = TimeSpan.FromMilliseconds(totalMs / metric.TotalRequests);
 
-            response = await _circuitBreakerPolicy.ExecuteAsync(
-                () => _retryPolicy.ExecuteAsync(
-                    () => _timeoutPolicy.ExecuteAsync(async () =>
-                    {
-                        var resp = await _httpClient.SendAsync(request);
-                        // Step 2: Notify response received
-                        if (userId != null)
-                        {
-                            await _hubContext.Clients.User(userId).SendAsync("ReceiveNotification",
-                                $"[{DateTime.UtcNow:O}] Received response: {(int)resp.StatusCode} {resp.StatusCode}");
-                        }
-                        return resp;
-                    }, context), context), context);
+            double minutesElapsed = (DateTime.UtcNow - metric.TimeStamp).TotalMinutes;
+            metric.RequestsPerMinute = minutesElapsed > 0 ? (int)(metric.TotalRequests / minutesElapsed) : 1;
 
-            stopwatch.Stop();
-            responseBody = await response.Content.ReadAsStringAsync();
-            responseHeaders = string.Join(", ", response.Headers.Select(h => $"{h.Key}: {string.Join(", ", h.Value)}"));
-            success = response.IsSuccessStatusCode;
+            memoryCache.Set(apiUrl, detailedResult, TimeSpan.FromMinutes(5));
 
-            // Step 3: Notify response details
-            if (userId != null)
-            {
-                await _hubContext.Clients.User(userId).SendAsync("ReceiveNotification",
-                    $"[{DateTime.UtcNow:O}] Response time: {stopwatch.ElapsedMilliseconds}ms, Success: {success}, Headers: {responseHeaders}");
-                await _hubContext.Clients.User(userId).SendAsync("ReceiveNotification",
-                    $"[{DateTime.UtcNow:O}] Response body (first 100 chars): {responseBody.Length > 0 ? responseBody.Substring(0, Math.Min(100, responseBody.Length)) : "Empty"}");
-            }
+            return (metric, response.StatusCode, detailedResult.BodySnippet);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
             stopwatch.Stop();
-            _logger.LogError($"❌ Error scanning {apiUrl}: {e.Message}");
-            if (userId != null)
+            metric.ErrorsCount++;
+
+            ApiScanResult detailedResult = new()
             {
-                await _hubContext.Clients.User(userId).SendAsync("ReceiveNotification",
-                    $"[{DateTime.UtcNow:O}] Scan error: {e.Message}");
-            }
+                Status = "Failed",
+                Latency = new LatencyMetrics { DnsResolution = "N/A", Connect = "N/A", TotalRequest = "N/A" },
+                Headers = new List<string> { "N/A" },
+                BodySnippet = $"Error: {ex.Message}",
+                Health = "❌ Unhealthy: Scan Failed ❌",
+                ColorHint = "red",
+                Packets = new List<PacketInfo>(packets)
+            };
+
+            return (metric, HttpStatusCode.RequestTimeout, detailedResult.BodySnippet);
         }
-
-        var apiMetrics = new ApiMetrics
+        finally
         {
-            TotalRequests = 1,
-            RequestsPerMinute = 1,
-            AverageResponseTime = stopwatch.Elapsed,
-            ErrorsCount = success ? 0 : 1
-        };
-
-        _memoryCache.Set(apiUrl, apiMetrics, TimeSpan.FromMinutes(5));
-
-        // Step 4: Notify caching
-        if (userId != null)
-        {
-            await _hubContext.Clients.User(userId).SendAsync("ReceiveNotification",
-                $"[{DateTime.UtcNow:O}] Metrics cached for {apiUrl} ({method}) - Total: {apiMetrics.AverageResponseTime.TotalMilliseconds:F2}ms, Errors: {apiMetrics.ErrorsCount}");
+            captureDevice.StopCapture();
+            captureDevice.Close();
+            response?.Dispose();
         }
-
-        string responseSnippet = responseBody.Length > 0 ? responseBody.Substring(0, Math.Min(100, responseBody.Length)) : "Empty";
-        return (apiMetrics, response?.StatusCode ?? HttpStatusCode.RequestTimeout, responseSnippet);
     }
 
-    public async Task ScanApisAsync()
+    private async Task SendNotificationAsync(string? userId, string title, string message)
     {
-        var apiUrls = await _dbContext.ApiEndpoints
-            .Where(api => api.IsActive)
-            .Select(api => api.Url)
-            .ToListAsync();
-
-        if (!apiUrls.Any())
+        if (!string.IsNullOrEmpty(userId))
         {
-            _logger.LogWarning("⚠️ No active APIs found to scan.");
-            await _hubContext.Clients.All.SendAsync("ReceiveNotification", "No active APIs to scan.");
-            return;
-        }
-
-        _logger.LogInformation($"🚀 Scanning {apiUrls.Count} APIs...");
-        await _hubContext.Clients.All.SendAsync("ReceiveNotification", $"Scanning {apiUrls.Count} APIs...");
-
-        int failedCount = 0;
-        List<Task<ApiMetrics>> scanTasks = apiUrls
-            .Where(apiUrl => !_memoryCache.TryGetValue(apiUrl, out _))
-            .Select(async apiUrl =>
-            {
-                var (metrics, _, _) = await ScanSingleApiAsync(apiUrl);
-                if (metrics.ErrorsCount > 0) Interlocked.Increment(ref failedCount);
-                return metrics;
-            })
-            .ToList();
-
-        await Task.WhenAll(scanTasks);
-
-        if (failedCount > 0)
-        {
-            _logger.LogError($"❌ {failedCount} APIs failed.");
-            await _hubContext.Clients.All.SendAsync("ReceiveNotification", $"{failedCount} APIs failed.");
+            await hubContext.Clients.User(userId).SendAsync("ReceiveNotification", title, message);
         }
         else
         {
-            _logger.LogInformation("✅ All APIs scanned successfully.");
-            await _hubContext.Clients.All.SendAsync("ReceiveNotification", "All APIs scanned successfully.");
+            logger.LogWarning("UserId is null or empty; notification not sent.");
         }
+    }
+    
+    private string GetHealthStatus(double totalTimeMs)
+    {
+        return totalTimeMs < 300 ? "🌟 Healthy: Blazing Fast! 🌟" : totalTimeMs < 1000 ? "✅ Healthy: Good Response Time" : "⚠️ Warning: Slow Response—Investigate! ⚠️";
+    }
+
+    private string GetColorHint(double totalTimeMs)
+    {
+        return totalTimeMs < 300 ? "green" : totalTimeMs < 1000 ? "yellow" : "red";
     }
 }

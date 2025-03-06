@@ -41,7 +41,7 @@ public class RegisterController : ControllerBase
             return BadRequest(new { message = "Invalid registration details." });
         }
         
-        User existingUser = await userManager.FindByEmailAsync(model.Email);
+        User? existingUser = await userManager.FindByEmailAsync(model.Email);
 
         if (existingUser is not null)
         {
@@ -89,22 +89,28 @@ public class RegisterController : ControllerBase
             await userManager.AddToRoleAsync(newUser, defaultRole);
         }
         
-        string token = model.RememberMe
-            ? await tokenService.GenerateLongLivedRefreshToken(newUser)
-            : await tokenService.GenerateShortLivedAccessToken(newUser);
+        string accessToken = await tokenService.GenerateShortLivedAccessToken(newUser);
+        string refreshToken = await tokenService.GenerateLongLivedRefreshToken(newUser);
         
-        Response.Cookies.Append("AuthToken", token, new CookieOptions
+        newUser.RefreshToken = refreshToken;
+        newUser.RefreshTokenExpiry = DateTimeOffset.UtcNow.AddDays(Constants.RefreshTokenExpirationDays);
+        
+        await userManager.UpdateAsync(newUser);
+        
+        Response.Cookies.Append("RefreshToken", refreshToken, new CookieOptions
         {
             HttpOnly = true,
             Secure = true,
             SameSite = SameSiteMode.None,
-            Expires = model.RememberMe ? DateTimeOffset.UtcNow.AddDays(Constants.RefreshTokenExpirationDays) : DateTimeOffset.UtcNow.AddHours(Constants.DefaultAccessTokenExpirationMinutes)
+            Expires = DateTimeOffset.UtcNow.AddDays(Constants.RefreshTokenExpirationDays)
         });
         
         return Ok(new
         {
             message = "User registered successfully.",
-            TokenType = model.RememberMe ? "LongLivedRefreshToken" : "ShortLivedAccessToken"
+            TokenType = "LongLivedRefreshToken",
+            accessToken = accessToken,
+            refreshToken = refreshToken,
         });
     }
 }

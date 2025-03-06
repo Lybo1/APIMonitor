@@ -164,6 +164,10 @@
               "target": "Package",
               "version": "[9.0.1, )"
             },
+            "Microsoft.Extensions.Caching.Memory": {
+              "target": "Package",
+              "version": "[9.0.2, )"
+            },
             "Microsoft.Extensions.Http": {
               "target": "Package",
               "version": "[9.0.2, )"
@@ -191,6 +195,10 @@
             "Otp.NET": {
               "target": "Package",
               "version": "[1.4.0, )"
+            },
+            "PacketDotNet": {
+              "target": "Package",
+              "version": "[1.4.7, )"
             },
             "Polly": {
               "target": "Package",
@@ -236,13 +244,13 @@
               "target": "Package",
               "version": "[6.3.0, )"
             },
-            "Sharp_Pcap": {
-              "target": "Package",
-              "version": "[4.2.0, )"
-            },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
               "version": "[7.2.0, )"
+            },
+            "System.Net.Http": {
+              "target": "Package",
+              "version": "[4.3.4, )"
             },
             "Twilio": {
               "target": "Package",
@@ -263,7 +271,7 @@
           "downloadDependencies": [
             {
               "name": "Microsoft.AspNetCore.App.Ref",
-              "version": "[9.0.1, 9.0.1]"
+              "version": "[9.0.2, 9.0.2]"
             }
           ],
           "frameworkReferences": {
@@ -274,7 +282,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.102/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.103/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
