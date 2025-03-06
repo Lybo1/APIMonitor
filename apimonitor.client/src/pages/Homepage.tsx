@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef, ErrorBoundary } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import * as React from 'react';
 import { useAuth } from '../context/AuthContext.tsx';
 import * as signalR from '@microsoft/signalr'; // Correct full import
 import { useQuery } from '@tanstack/react-query'; // v5 import
@@ -157,7 +158,7 @@ const Homepage: React.FC = () => {
                 toast.info(message, { autoClose: 5000, position: 'top-right', style: { backgroundColor: '#2d3748', color: '#48bb78' } });
             });
 
-            newConnection.on('Disconnected', (error) => {
+            newConnection.on('Disconnected', (error: Error) => {
                 console.error(`[${new Date().toISOString()}] SignalR Disconnected: ${error?.message || 'Unknown error'}`);
                 setCliOutput(prev => [...prev, `[${new Date().toISOString()}] SignalR Disconnected: ${error?.message || 'Unknown error'}`]);
                 toast.error('SignalR connection lost. Attempting to reconnect...', { autoClose: 5000, position: 'top-right', style: { backgroundColor: '#2d3748', color: '#48bb78' } });
@@ -173,15 +174,15 @@ const Homepage: React.FC = () => {
                     setCliOutput(prev => [...prev, `[${new Date().toISOString()}] SignalR Error: ${err.message}`]);
                     toast.error(`SignalR connection failed: ${err.message}`, { autoClose: 5000, position: 'top-right', style: { backgroundColor: '#2d3748', color: '#48bb78' } });
                 });
-        } catch (error) {
-            console.error(`[${new Date().toISOString()}] SignalR Initialization Error: ${error.message}`);
-            setCliOutput(prev => [...prev, `[${new Date().toISOString()}] SignalR Initialization Error: ${error.message}`]);
-            toast.error(`SignalR initialization failed: ${error.message}`, { autoClose: 5000, position: 'top-right', style: { backgroundColor: '#2d3748', color: '#48bb78' } });
+        } catch (error: unknown) {
+            console.error(`[${new Date().toISOString()}] SignalR Initialization Error: ${(error as Error).message}`);
+            setCliOutput(prev => [...prev, `[${new Date().toISOString()}] SignalR Initialization Error: ${(error as Error).message}`]);
+            toast.error(`SignalR initialization failed: ${(error as Error).message}`, { autoClose: 5000, position: 'top-right', style: { backgroundColor: '#2d3748', color: '#48bb78' } });
         }
 
         return () => {
             if (newConnection?.state === signalR.HubConnectionState.Connected) {
-                newConnection.stop().catch(err => console.error(`[${new Date().toISOString()}] SignalR Stop Error: ${err.message}`));
+                newConnection.stop().catch((err: Error) => console.error(`[${new Date().toISOString()}] SignalR Stop Error: ${err.message}`));
             }
         };
     }, [isAuthenticated, token, user, navigate]);

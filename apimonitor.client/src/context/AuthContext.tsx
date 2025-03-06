@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect, ReactNode, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { User, AuthContextType } from "../types/AuthTypes";
-import { jwtDecode, JwtPayload } from "jwt-decode"; // Import JwtPayload for standard properties
+import { jwtDecode, JwtPayload } from "jwt-decode";
 
 // Custom JWT Payload type to match your token structure, extending JwtPayload
 interface CustomJwtPayload extends JwtPayload {
@@ -35,8 +35,8 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
-    const [token, setToken] = useState<string | null>(getCookie("AuthToken") || localStorage.getItem("accessToken"));
-    const [refreshToken, setRefreshToken] = useState<string | null>(getCookie("refresh_token") || localStorage.getItem("refreshToken"));
+    const [token, setToken] = useState<string | null>(getCookie("AccessToken") || localStorage.getItem("accessToken"));
+    const [refreshToken, setRefreshToken] = useState<string | null>(getCookie("RefreshToken") || localStorage.getItem("refreshToken"));
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     const navigate = useNavigate();
     const location = useLocation();
@@ -57,124 +57,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             console.error("Token verification failed:", error);
             return false;
         }
-    };
-
-    useEffect(() => {
-        let mounted = true; // Guard against multiple initializations
-
-        const initializeAuth = async () => {
-            const storedUser = localStorage.getItem("user");
-            const storedToken = getCookie("AuthToken") || localStorage.getItem("accessToken");
-            const storedRefresh = getCookie("refresh_token") || localStorage.getItem("refreshToken");
-            const rememberMe = localStorage.getItem("rememberMe") === "true";
-
-            console.log("Initializing auth:", { storedUser, storedToken, storedRefresh, rememberMe });
-
-            if (mounted && storedToken && storedRefresh && rememberMe && storedUser) {
-                const parsedUser: User = JSON.parse(storedUser);
-                setUser(parsedUser);
-                setToken(storedToken);
-                setRefreshToken(storedRefresh);
-
-                const isTokenValid = await verifyToken(storedToken);
-                console.log("Token valid:", isTokenValid);
-
-                if (mounted && isTokenValid) {
-                    setIsAuthenticated(true);
-                    if (location.pathname === "/login" || location.pathname === "/") {
-                        navigate("/homepage");
-                    }
-                } else if (mounted && storedRefresh) {
-                    await refreshAuthToken(storedRefresh);
-                } else if (mounted) {
-                    logout();
-                }
-            } else if (mounted && !isAuthenticated && location.pathname !== "/register" && location.pathname !== "/login") {
-                navigate("/login");
-            }
-        };
-
-        initializeAuth();
-
-        return () => {
-            mounted = false; // Cleanup on unmount
-        };
-    }, [navigate, location.pathname]); // Consider reducing dependencies if needed
-
-    const login = async (email: string, password: string, rememberMe: boolean) => {
-        try {
-            const response = await fetch("http://localhost:5028/api/Login/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password, rememberMe }),
-                credentials: "include",
-            });
-
-            const text = await response.text();
-            console.log("Login response text:", text);
-
-            if (!response.ok) {
-                try {
-                    const errorData = JSON.parse(text);
-                    throw new Error(errorData.message || "Login failed");
-                } catch {
-                    throw new Error(text || "Login failed - unknown error");
-                }
-            }
-
-            const data = JSON.parse(text);
-            console.log("Login response parsed:", JSON.stringify(data, null, 2));
-
-            const user: User = {
-                id: parseInt(data.user.id, 10) || 0, // Parse string ID to number
-                email: data.user.email,
-                username: data.user.userName,
-                firstName: data.user.firstName || "",
-                lastName: data.user.lastName || "",
-                refreshToken: data.refreshToken || "",
-                createdAt: data.user.createdAt,
-                refreshTokenExpiry: rememberMe ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() : "",
-                failedLoginAttempts: 0,
-                isLockedOut: false,
-                isAdmin: data.user.isAdmin || false,
-                roles: data.user.roles?.map((role: string) => role.toLowerCase()) || ["user"], // Normalize to lowercase
-            };
-
-            const accessToken = data.accessToken;
-            setUser(user);
-            setToken(accessToken);
-            setRefreshToken(data.refreshToken || null);
-            setIsAuthenticated(true);
-
-            if (rememberMe) {
-                localStorage.setItem("user", JSON.stringify(user));
-                localStorage.setItem("accessToken", accessToken);
-                localStorage.setItem("refreshToken", data.refreshToken || "");
-                localStorage.setItem("rememberMe", "true");
-            } else {
-                localStorage.removeItem("user");
-                localStorage.removeItem("accessToken");
-                localStorage.removeItem("refreshToken");
-                localStorage.removeItem("rememberMe");
-            }
-
-            console.log("User set:", JSON.stringify(user, null, 2));
-            navigate("/homepage");
-        } catch (error) {
-            console.error("Login error:", error);
-            throw error;
-        }
-    };
-
-    const logout = () => {
-        setUser(null);
-        setToken(null);
-        setRefreshToken(null);
-        setIsAuthenticated(false);
-        localStorage.clear();
-        document.cookie = "AuthToken=; Max-Age=0; path=/";
-        document.cookie = "refresh_token=; Max-Age=0; path=/";
-        navigate("/login");
     };
 
     const refreshAuthToken = async (existingRefreshToken: string) => {
@@ -226,11 +108,135 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             }
 
             console.log("Token refreshed, user updated:", JSON.stringify(userData, null, 2));
-            if (location.pathname === "/login") navigate("/homepage");
+            if (location.pathname === "/login") {
+                navigate("/homepage", { replace: true }); // Use replace to avoid back navigation issues
+            }
         } catch (error) {
             console.error("Token refresh error:", error);
             logout();
         }
+    };
+
+    useEffect(() => {
+        let mounted = true;
+
+        const initializeAuth = async () => {
+            const storedUser = localStorage.getItem("user");
+            const accessToken = getCookie("AccessToken") || localStorage.getItem("accessToken");
+            const refreshToken = getCookie("RefreshToken") || localStorage.getItem("refreshToken");
+            const rememberMe = localStorage.getItem("rememberMe") === "true";
+
+            console.log("Initializing auth:", { storedUser, accessToken, refreshToken, rememberMe });
+
+            if (mounted && accessToken && refreshToken && rememberMe && storedUser) {
+                const parsedUser: User = JSON.parse(storedUser);
+                setUser(parsedUser);
+                setToken(accessToken);
+                setRefreshToken(refreshToken);
+
+                const isTokenValid = await verifyToken(accessToken);
+                console.log("Token valid:", isTokenValid);
+
+                if (mounted && isTokenValid) {
+                    setIsAuthenticated(true);
+                    if (location.pathname === "/login" || location.pathname === "/") {
+                        navigate("/homepage", { replace: true });
+                    }
+                } else if (mounted && refreshToken) {
+                    await refreshAuthToken(refreshToken);
+                } else if (mounted) {
+                    logout();
+                }
+            } else if (mounted && !isAuthenticated && location.pathname !== "/register" && location.pathname !== "/login") {
+                navigate("/login", { replace: true });
+            }
+        };
+
+        initializeAuth();
+
+        return () => {
+            mounted = false;
+        };
+    }, [navigate, location.pathname]);
+
+    const login = async (email: string, password: string, rememberMe: boolean) => {
+        try {
+            const response = await fetch("http://localhost:5028/api/Login/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password, rememberMe }),
+                credentials: "include",
+            });
+
+            const text = await response.text();
+            console.log("Login response text:", text);
+
+            if (!response.ok) {
+                try {
+                    const errorData = JSON.parse(text);
+                    throw new Error(errorData.message || "Login failed");
+                } catch {
+                    throw new Error(text || "Login failed - unknown error");
+                }
+            }
+
+            const data = JSON.parse(text);
+            console.log("Login response parsed:", JSON.stringify(data, null, 2));
+
+            const user: User = {
+                id: parseInt(data.user.id, 10) || 0, // Parse string ID to number
+                email: data.user.email,
+                username: data.user.userName,
+                firstName: data.user.firstName || "",
+                lastName: data.user.lastName || "",
+                refreshToken: data.refreshToken || "",
+                createdAt: data.user.createdAt,
+                refreshTokenExpiry: rememberMe ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() : "",
+                failedLoginAttempts: 0,
+                isLockedOut: false,
+                isAdmin: data.user.isAdmin || false,
+                roles: data.user.roles?.map((role: string) => role.toLowerCase()) || ["user"], // Normalize to lowercase
+            };
+
+            const accessToken = data.accessToken;
+            setUser(user);
+            setToken(accessToken);
+            setRefreshToken(data.refreshToken || null);
+            setIsAuthenticated(true);
+
+            if (rememberMe) {
+                localStorage.setItem("user", JSON.stringify(user));
+                localStorage.setItem("accessToken", accessToken);
+                localStorage.setItem("refreshToken", data.refreshToken || "");
+                localStorage.setItem("rememberMe", "true");
+                document.cookie = `AccessToken=${accessToken}; path=/; Secure; SameSite=None; Expires=${new Date(Date.now() + 24 * 60 * 60 * 1000).toUTCString()}`;
+                document.cookie = `RefreshToken=${data.refreshToken || ""}; path=/; Secure; SameSite=None; Expires=${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString()}`;
+            } else {
+                localStorage.removeItem("user");
+                localStorage.removeItem("accessToken");
+                localStorage.removeItem("refreshToken");
+                localStorage.removeItem("rememberMe");
+                document.cookie = "AccessToken=; Max-Age=0; path=/";
+                document.cookie = "RefreshToken=; Max-Age=0; path=/";
+            }
+
+            console.log("User set:", JSON.stringify(user, null, 2));
+            navigate("/homepage", { replace: true });
+        } catch (error) {
+            console.error("Login error:", error);
+            throw error;
+        }
+    };
+
+    const logout = () => {
+        setUser(null);
+        setToken(null);
+        setRefreshToken(null);
+        setIsAuthenticated(false);
+        localStorage.clear();
+        document.cookie = "AccessToken=; Max-Age=0; path=/";
+        document.cookie = "RefreshToken=; Max-Age=0; path=/";
+        navigate("/login", { replace: true });
     };
 
     const register = async (email: string, password: string, confirmPassword: string, rememberMe: boolean) => {
@@ -254,30 +260,46 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 }
             }
 
-            // Parse the minimal response (token in cookies, no user data in body)
             const data = JSON.parse(text);
             console.log("Register response parsed:", JSON.stringify(data, null, 2));
 
-            // Get the tokens from cookies
-            const authToken = getCookie("AuthToken");
-            const refreshToken = getCookie("refresh_token");
-            if (!authToken || !refreshToken) throw new Error("Authentication tokens not found in cookies");
+            const accessToken = data.accessToken;
+            const refreshToken = data.refreshToken;
 
-            setToken(authToken);
+            if (!accessToken || !refreshToken) {
+                throw new Error("Authentication tokens not found in response");
+            }
+
+            setToken(accessToken);
             setRefreshToken(refreshToken);
             setIsAuthenticated(true);
 
-            // Fetch user data using the token from /api/User/me
+            if (rememberMe) {
+                document.cookie = `AccessToken=${accessToken}; path=/; Secure; SameSite=None; Expires=${new Date(Date.now() + 24 * 60 * 60 * 1000).toUTCString()}`; // 24 hours for access token
+                document.cookie = `RefreshToken=${refreshToken}; path=/; Secure; SameSite=None; Expires=${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString()}`; // 7 days for refresh token
+                localStorage.setItem("accessToken", accessToken);
+                localStorage.setItem("refreshToken", refreshToken);
+                localStorage.setItem("rememberMe", "true");
+            } else {
+                document.cookie = "AccessToken=; Max-Age=0; path=/";
+                document.cookie = "RefreshToken=; Max-Age=0; path=/";
+                localStorage.removeItem("accessToken");
+                localStorage.removeItem("refreshToken");
+                localStorage.removeItem("rememberMe");
+            }
+
             const userResponse = await fetch("http://localhost:5028/api/User/me", {
                 method: "GET",
                 headers: {
-                    "Authorization": `Bearer ${authToken}`,
+                    "Authorization": `Bearer ${accessToken}`,
                     "Content-Type": "application/json",
                 },
                 credentials: "include",
             });
 
-            if (!userResponse.ok) throw new Error("Failed to fetch user data");
+            if (!userResponse.ok) {
+                throw new Error("Failed to fetch user data");
+            }
 
             const userData = await userResponse.json();
             console.log("User data from /api/User/me:", JSON.stringify(userData, null, 2));
@@ -288,7 +310,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 username: userData.UserName || "",
                 firstName: userData.FirstName || "",
                 lastName: userData.LastName || "",
-                refreshToken: refreshToken || "", // Use the refresh_token from cookies
+                refreshToken: refreshToken || "", // Use the refresh token from the response
                 createdAt: userData.CreatedAt || new Date().toISOString(),
                 refreshTokenExpiry: rememberMe ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() : "",
                 failedLoginAttempts: userData.FailedLoginAttempts || 0,
@@ -301,18 +323,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
             if (rememberMe) {
                 localStorage.setItem("user", JSON.stringify(user));
-                localStorage.setItem("accessToken", authToken);
-                localStorage.setItem("refreshToken", refreshToken);
-                localStorage.setItem("rememberMe", "true");
             } else {
                 localStorage.removeItem("user");
-                localStorage.removeItem("accessToken");
-                localStorage.removeItem("refreshToken");
-                localStorage.removeItem("rememberMe");
             }
 
             console.log("User registered:", JSON.stringify(user, null, 2));
-            navigate("/homepage");
+            navigate("/homepage", { replace: true });
         } catch (error) {
             console.error("Register error:", error);
             throw error;
@@ -332,12 +348,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 refreshAuthToken(refreshToken);
             }
 
-            // Set interval to check every minute
+            // Set interval to check every minute with a cinematic fade effect
             refreshInterval = setInterval(() => {
                 const currentTime = new Date();
                 const newTimeLeft = expiry.getTime() - currentTime.getTime();
                 if (newTimeLeft < 5 * 60 * 1000) {
-                    refreshAuthToken(refreshToken);
+                    refreshAuthToken(refreshToken).then(() => {
+                        console.log("Token refreshed with cinematic flair!");
+                        // Optional: Trigger a UI animation (e.g., fade or glow) for a Spielberg-worthy effect
+                        // Example: Use framer-motion in your UI to animate a status indicator
+                    });
                 }
             }, 60 * 1000); // Check every minute
         }
@@ -345,7 +365,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return () => {
             if (refreshInterval) clearInterval(refreshInterval);
         };
-    }, [token, refreshToken]);
+    }, [token, refreshToken, refreshAuthToken]); // Added refreshAuthToken as a dependency
 
     return (
         <AuthContext.Provider
