@@ -125,18 +125,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             const accessToken = getCookie("AccessToken") || localStorage.getItem("accessToken");
             const refreshToken = getCookie("RefreshToken") || localStorage.getItem("refreshToken");
             const rememberMe = localStorage.getItem("rememberMe") === "true";
-
+        
             console.log("Initializing auth:", { storedUser, accessToken, refreshToken, rememberMe });
-
+        
             if (mounted && accessToken && refreshToken && rememberMe && storedUser) {
                 const parsedUser: User = JSON.parse(storedUser);
-                setUser(parsedUser);
+                setUser(parsedUser); // Set user immediately from localStorage
                 setToken(accessToken);
                 setRefreshToken(refreshToken);
-
+        
                 const isTokenValid = await verifyToken(accessToken);
                 console.log("Token valid:", isTokenValid);
-
+        
                 if (mounted && isTokenValid) {
                     setIsAuthenticated(true);
                     if (location.pathname === "/login" || location.pathname === "/") {
@@ -149,6 +149,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 }
             } else if (mounted && !isAuthenticated && location.pathname !== "/register" && location.pathname !== "/login") {
                 navigate("/login", { replace: true });
+            } else {
+                console.log("No stored auth data, waiting for login/register");
             }
         };
 
@@ -247,36 +249,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 body: JSON.stringify({ email, password, confirmPassword, rememberMe }),
                 credentials: "include",
             });
-
+    
             const text = await response.text();
             console.log("Register response text:", text);
-
+    
             if (!response.ok) {
                 try {
                     const errorData = JSON.parse(text);
+                    if (errorData.errors) {
+                        const errorMessages = Object.values(errorData.errors).flat().join(" ");
+                        throw new Error(errorMessages);
+                    }
                     throw new Error(errorData.message || "Registration failed");
                 } catch {
                     throw new Error(text || "Registration failed - unknown error");
                 }
             }
-
+    
             const data = JSON.parse(text);
             console.log("Register response parsed:", JSON.stringify(data, null, 2));
-
+    
             const accessToken = data.accessToken;
             const refreshToken = data.refreshToken;
-
+    
             if (!accessToken || !refreshToken) {
                 throw new Error("Authentication tokens not found in response");
             }
-
+    
             setToken(accessToken);
             setRefreshToken(refreshToken);
             setIsAuthenticated(true);
-
+    
             if (rememberMe) {
-                document.cookie = `AccessToken=${accessToken}; path=/; Secure; SameSite=None; Expires=${new Date(Date.now() + 24 * 60 * 60 * 1000).toUTCString()}`; // 24 hours for access token
-                document.cookie = `RefreshToken=${refreshToken}; path=/; Secure; SameSite=None; Expires=${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString()}`; // 7 days for refresh token
+                document.cookie = `AccessToken=${accessToken}; path=/; Secure; SameSite=None; Expires=${new Date(Date.now() + 24 * 60 * 60 * 1000).toUTCString()}`;
+                document.cookie = `RefreshToken=${refreshToken}; path=/; Secure; SameSite=None; Expires=${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString()}`;
                 localStorage.setItem("accessToken", accessToken);
                 localStorage.setItem("refreshToken", refreshToken);
                 localStorage.setItem("rememberMe", "true");
@@ -287,7 +293,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 localStorage.removeItem("refreshToken");
                 localStorage.removeItem("rememberMe");
             }
-
+    
+            // Fetch user data
             const userResponse = await fetch("http://localhost:5028/api/User/me", {
                 method: "GET",
                 headers: {
@@ -296,37 +303,44 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 },
                 credentials: "include",
             });
-
+    
             if (!userResponse.ok) {
-                throw new Error("Failed to fetch user data");
+                const errorText = await userResponse.text();
+                console.error("User/me response error:", errorText, "Status:", userResponse.status);
+                throw new Error(`Failed to fetch user data: ${errorText || userResponse.statusText}`);
             }
-
+    
             const userData = await userResponse.json();
             console.log("User data from /api/User/me:", JSON.stringify(userData, null, 2));
-
+    
             const user: User = {
-                id: userData.Id || 0, // Match the response property name (capital 'Id')
-                email: userData.Email || "",
-                username: userData.UserName || "",
-                firstName: userData.FirstName || "",
-                lastName: userData.LastName || "",
-                refreshToken: refreshToken || "", // Use the refresh token from the response
-                createdAt: userData.CreatedAt || new Date().toISOString(),
+                id: userData.Id || (parseInt(userData.id, 10) || 0), // Try both casing
+                email: userData.Email || userData.email || "",
+                username: userData.UserName || userData.username || userData.name || "",
+                firstName: userData.FirstName || userData.firstName || "",
+                lastName: userData.LastName || userData.lastName || "",
+                refreshToken: refreshToken || "",
+                createdAt: userData.CreatedAt || userData.createdAt || new Date().toISOString(),
                 refreshTokenExpiry: rememberMe ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() : "",
-                failedLoginAttempts: userData.FailedLoginAttempts || 0,
-                isLockedOut: userData.IsLockedOut || false,
-                isAdmin: userData.IsAdmin || false,
-                roles: userData.Roles?.map((role: string) => role.toLowerCase()) || ["user"], // Normalize to lowercase
+                failedLoginAttempts: userData.FailedLoginAttempts || userData.failedLoginAttempts || 0,
+                isLockedOut: userData.IsLockedOut || userData.isLockedOut || false,
+                isAdmin: userData.IsAdmin || userData.isAdmin || false,
+                roles: userData.Roles?.map((role: string) => role.toLowerCase()) || userData.roles?.map((role: string) => role.toLowerCase()) || ["user"],
             };
-
+    
+            if (!user.email) {
+                console.warn("User email is empty, forcing email from registration:", email);
+                user.email = email; // Fallback to registration email if missing
+            }
+    
             setUser(user);
-
+    
             if (rememberMe) {
                 localStorage.setItem("user", JSON.stringify(user));
             } else {
                 localStorage.removeItem("user");
             }
-
+    
             console.log("User registered:", JSON.stringify(user, null, 2));
             navigate("/homepage", { replace: true });
         } catch (error) {
@@ -335,7 +349,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
     };
 
-    // Add periodic token refresh check
     useEffect(() => {
         let refreshInterval: ReturnType<typeof setInterval> | null = null;
         if (token && refreshToken) {

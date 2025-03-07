@@ -16,8 +16,18 @@ const RegisterPage: React.FC = () => {
         rememberMe: localStorage.getItem("rememberMe") === "true",
     };
 
+    // Form data state
     const [formData, setFormData] = useState(initialFormData);
+    // General error state (e.g., for server errors)
     const [error, setError] = useState<string | null>(null);
+    // Real-time validation errors for each field
+    const [formErrors, setFormErrors] = useState({
+        email: "",
+        password: "",
+        confirmPassword: "",
+    });
+    // Real-time password match feedback
+    const [passwordMatchMessage, setPasswordMatchMessage] = useState<string>("");
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, type, checked } = e.target;
@@ -27,30 +37,106 @@ const RegisterPage: React.FC = () => {
             [name]: type === "checkbox" ? checked : value,
         }));
 
+        // Real-time validation for email
+        if (name === "email") {
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            setFormErrors(prev => ({
+                ...prev,
+                email: !value
+                    ? "Email is required."
+                    : !emailRegex.test(value)
+                    ? "Invalid email format."
+                    : "",
+            }));
+        }
+        // Real-time validation for password
+        else if (name === "password") {
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+            setFormErrors(prev => ({
+                ...prev,
+                password: !value
+                    ? "Password is required."
+                    : value.length < 8
+                    ? "Password must be at least 8 characters long."
+                    : !passwordRegex.test(value)
+                    ? "Password must include uppercase, lowercase, digit, and special character (@$!%*?&)."
+                    : "",
+            }));
+            // Update confirmPassword validation if password changes
+            setFormErrors(prev => ({
+                ...prev,
+                confirmPassword: !formData.confirmPassword
+                    ? "Please confirm your password."
+                    : formData.confirmPassword !== value
+                    ? "Passwords do not match."
+                    : "",
+            }));
+            // Update password match message
+            setPasswordMatchMessage(
+                !formData.confirmPassword
+                    ? ""
+                    : formData.confirmPassword !== value
+                    ? "Passwords do not match"
+                    : "Passwords match"
+            );
+        }
+        // Real-time validation for confirmPassword
+        else if (name === "confirmPassword") {
+            setFormErrors(prev => ({
+                ...prev,
+                confirmPassword: !value
+                    ? "Please confirm your password."
+                    : value !== formData.password
+                    ? "Passwords do not match."
+                    : "",
+            }));
+            // Update password match message
+            setPasswordMatchMessage(
+                !value
+                    ? ""
+                    : value !== formData.password
+                    ? "Passwords do not match"
+                    : "Passwords match"
+            );
+        }
+
         if (error) {
             setError(null);
         }
 
         if (name === "rememberMe") {
-            localStorage.setItem("rememberMe", checked.toString()); // Fixed to use checked.toString()
+            localStorage.setItem("rememberMe", checked.toString());
         }
     };
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        // Required field check
         if (!formData.email || !formData.password || !formData.confirmPassword) {
             setError("Please fill in all fields.");
             return;
         }
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
+        // Email validation (match server regex)
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
         if (!emailRegex.test(formData.email)) {
-            setError("Invalid email format.");
+            setError("Invalid email format. Must be a valid email with a domain (e.g., user@domain.com).");
             return;
         }
 
+        // Password validation (match server regex)
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (formData.password.length < 8) {
+            setError("Password must be at least 8 characters long.");
+            return;
+        }
+        if (!passwordRegex.test(formData.password)) {
+            setError("Password must include at least one uppercase letter, one lowercase letter, one digit, and one special character (@$!%*?&).");
+            return;
+        }
+
+        // Confirm password match
         if (formData.password !== formData.confirmPassword) {
             setError("Passwords do not match!");
             return;
@@ -61,9 +147,12 @@ const RegisterPage: React.FC = () => {
             await register(email, password, confirmPassword, rememberMe);
             setError(null);
             redirectToHome();
-        } catch (error) {
+        } catch (error: any) {
             console.error("Fetch error:", error);
-            setError("Error occurred while making the request.");
+            const serverError = error.message?.includes("Password must have")
+                ? error.message
+                : "Error occurred while making the request.";
+            setError(serverError);
         }
     };
 
@@ -85,7 +174,7 @@ const RegisterPage: React.FC = () => {
                 }}
                 style={{
                     textShadow:
-                        "0px 5px 5px rgba(0, 0, 0, 0.6), 0px 0px 10px rgba(0, 128, 0, 0.8)", // Green glow
+                        "0px 5px 5px rgba(0, 0, 0, 0.6), 0px 0px 10px rgba(0, 128, 0, 0.8)",
                 }}
             >
                 API Monitor
@@ -97,10 +186,7 @@ const RegisterPage: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
             >
-                <form
-                    onSubmit={handleRegister}
-                    className="space-y-4"
-                >
+                <form onSubmit={handleRegister} className="space-y-4">
                     <div className="mb-4">
                         <label className="block mb-2 text-green-400 font-bold">Email</label>
                         <motion.input
@@ -108,11 +194,18 @@ const RegisterPage: React.FC = () => {
                             name="email"
                             value={formData.email}
                             onChange={handleChange}
-                            className="w-full p-3 bg-gray-800 text-green-400 placeholder-green-600 border border-green-500 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 transition-all ease-in-out hover:bg-gray-700"
+                            className={`w-full p-3 bg-gray-800 text-green-400 placeholder-green-600 border ${
+                                formErrors.email ? "border-red-500" : "border-green-500"
+                            } rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 transition-all ease-in-out hover:bg-gray-700`}
                             whileFocus={{ scale: 1.02 }}
                             transition={{ duration: 0.2 }}
                             placeholder="Enter your email"
+                            required
+                            aria-label="Email address"
                         />
+                        {formErrors.email && (
+                            <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>
+                        )}
                     </div>
 
                     <div className="mb-4">
@@ -122,11 +215,18 @@ const RegisterPage: React.FC = () => {
                             name="password"
                             value={formData.password}
                             onChange={handleChange}
-                            className="w-full p-3 bg-gray-800 text-green-400 placeholder-green-600 border border-green-500 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 transition-all ease-in-out hover:bg-gray-700"
+                            className={`w-full p-3 bg-gray-800 text-green-400 placeholder-green-600 border ${
+                                formErrors.password ? "border-red-500" : "border-green-500"
+                            } rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 transition-all ease-in-out hover:bg-gray-700`}
                             whileFocus={{ scale: 1.02 }}
                             transition={{ duration: 0.2 }}
                             placeholder="Enter your password"
+                            required
+                            aria-label="Password"
                         />
+                        {formErrors.password && (
+                            <p className="text-red-500 text-sm mt-1">{formErrors.password}</p>
+                        )}
                     </div>
 
                     <div className="mb-4">
@@ -136,11 +236,32 @@ const RegisterPage: React.FC = () => {
                             name="confirmPassword"
                             value={formData.confirmPassword}
                             onChange={handleChange}
-                            className="w-full p-3 bg-gray-800 text-green-400 placeholder-green-600 border border-green-500 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 transition-all ease-in-out hover:bg-gray-700"
+                            className={`w-full p-3 bg-gray-800 text-green-400 placeholder-green-600 border ${
+                                formErrors.confirmPassword ? "border-red-500" : "border-green-500"
+                            } rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 transition-all ease-in-out hover:bg-gray-700`}
                             whileFocus={{ scale: 1.02 }}
                             transition={{ duration: 0.2 }}
                             placeholder="Confirm your password"
+                            required
+                            aria-label="Confirm password"
                         />
+                        {formErrors.confirmPassword && (
+                            <p className="text-red-500 text-sm mt-1">{formErrors.confirmPassword}</p>
+                        )}
+                        {passwordMatchMessage && (
+                            <motion.span
+                                className={`block text-sm mt-1 ${
+                                    passwordMatchMessage === "Passwords match"
+                                        ? "text-green-400"
+                                        : "text-red-500"
+                                }`}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                {passwordMatchMessage}
+                            </motion.span>
+                        )}
                     </div>
 
                     <div className="flex items-center mb-4">
@@ -153,6 +274,7 @@ const RegisterPage: React.FC = () => {
                                 className="accent-green-400 mr-2"
                                 whileTap={{ scale: 1.1 }}
                                 transition={{ duration: 0.2 }}
+                                aria-label="Remember me"
                             />
                             <span className="ml-2 pb-3">Remember me</span>
                         </label>
@@ -160,18 +282,27 @@ const RegisterPage: React.FC = () => {
 
                     <motion.button
                         type="submit"
-                        disabled={!!error || !formData.email || !formData.password || !formData.confirmPassword}
                         className="w-full py-3 bg-green-500 text-gray-900 font-semibold rounded-md shadow-md transition-all ease-in-out hover:bg-green-600 hover:scale-105 disabled:bg-gray-600 disabled:cursor-not-allowed"
                         whileHover={{ scale: 1.05 }}
                         transition={{ duration: 0.2 }}
+                        disabled={
+                            !!error ||
+                            !formData.email ||
+                            !formData.password ||
+                            !formData.confirmPassword ||
+                            formData.password !== formData.confirmPassword ||
+                            !!formErrors.email ||
+                            !!formErrors.password ||
+                            !!formErrors.confirmPassword
+                        }
                     >
                         Submit
                     </motion.button>
 
                     <motion.button
-                        type="submit"
+                        type="button"
                         onClick={() => navigate("/login")}
-                        className="w-full py-3 bg-green-500 text-gray-900 font-semibold rounded-md shadow-md transition-all ease-in-out hover:bg-green-600 hover:scale-105 disabled:bg-gray-600 disabled:cursor-not-allowed"
+                        className="w-full py-3 bg-green-500 text-gray-900 font-semibold rounded-md shadow-md transition-all ease-in-out hover:bg-green-600 hover:scale-105"
                         whileHover={{ scale: 1.05 }}
                         transition={{ duration: 0.2 }}
                     >
