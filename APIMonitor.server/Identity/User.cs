@@ -44,5 +44,4 @@ public class User : IdentityUser<int>
     public virtual ICollection<AuditLog> AuditLogs { get; set; } = new List<AuditLog>();
     public virtual ICollection<EventLog> EventLogs { get; set; } = new List<EventLog>();
     public virtual ICollection<UserActivityLog> ActivityLogs { get; set; } = new List<UserActivityLog>();
-    public virtual ICollection<DashboardWidget> DashboardWidgets { get; set; } = new List<DashboardWidget>();
 }

@@ -35,15 +35,15 @@ public class RegisterController : ControllerBase
     public async Task<IActionResult> Register([FromBody] RegisterViewModel? model)
     {
         DateTime startTime = DateTime.UtcNow;
-                
-        if (model is null || string.IsNullOrWhiteSpace(model.Email) || string.IsNullOrWhiteSpace(model.Password))
+
+        if (!ModelState.IsValid)
         {
-            return BadRequest(new { message = "Invalid registration details." });
+            return BadRequest(new ValidationProblemDetails(ModelState));
         }
-        
+
         User? existingUser = await userManager.FindByEmailAsync(model.Email);
 
-        if (existingUser is not null)
+        if (existingUser != null)
         {
             return Conflict(new { message = "Email is already taken." });
         }
@@ -54,21 +54,20 @@ public class RegisterController : ControllerBase
             Email = model.Email,
             RememberMe = model.RememberMe,
         };
-        
+
         IdentityResult result = await userManager.CreateAsync(newUser, model.Password);
 
         if (!result.Succeeded)
         {
             string errors = string.Join(',', result.Errors.Select(e => e.Description));
-            
             return BadRequest(new { message = errors });
         }
 
         const string defaultRole = "User";
-        
+
         bool isInRole = await userManager.IsInRoleAsync(newUser, defaultRole);
-        
-        await auditLogService.LogActionAsync(newUser.Id, "Register", $"User {model.Email} registered.", startTime);
+
+        await auditLogService.LogActionAsync(newUser.Id, "Register", $"User {model.Email} registered with ID {newUser.Id}.", startTime);
         await notificationService.SendNotificationAsync(newUser.Id.ToString(), "Welcome!", "Your account has been created.", HttpContext);
 
         if (!isInRole)
@@ -85,18 +84,34 @@ public class RegisterController : ControllerBase
                     return StatusCode(500, new { message = $"Failed to create role {defaultRole}." });
                 }
             }
-            
+
             await userManager.AddToRoleAsync(newUser, defaultRole);
         }
-        
-        string accessToken = await tokenService.GenerateShortLivedAccessToken(newUser);
-        string refreshToken = await tokenService.GenerateLongLivedRefreshToken(newUser);
-        
-        newUser.RefreshToken = refreshToken;
-        newUser.RefreshTokenExpiry = DateTimeOffset.UtcNow.AddDays(Constants.RefreshTokenExpirationDays);
-        
-        await userManager.UpdateAsync(newUser);
-        
+
+        string accessToken;
+        string refreshToken;
+
+        try
+        {
+            accessToken = await tokenService.GenerateShortLivedAccessToken(newUser);
+            refreshToken = await tokenService.GenerateLongLivedRefreshToken(newUser);
+
+            newUser.RefreshToken = refreshToken;
+            newUser.RefreshTokenExpiry = DateTimeOffset.UtcNow.AddDays(Constants.RefreshTokenExpirationDays);
+
+            await userManager.UpdateAsync(newUser);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, $"Failed to generate tokens for user {model.Email}.");
+            return StatusCode(500, new { message = "Failed to generate authentication tokens." });
+        }
+
+        if (model.RememberMe)
+        {
+            Log.Information($"User {model.Email} opted for RememberMe.");
+        }
+
         Response.Cookies.Append("RefreshToken", refreshToken, new CookieOptions
         {
             HttpOnly = true,
@@ -104,7 +119,7 @@ public class RegisterController : ControllerBase
             SameSite = SameSiteMode.None,
             Expires = DateTimeOffset.UtcNow.AddDays(Constants.RefreshTokenExpirationDays)
         });
-        
+
         return Ok(new
         {
             message = "User registered successfully.",

@@ -18,15 +18,16 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<int>, i
     public DbSet<ApiEndpoint> ApiEndpoints { get; set; }
     public DbSet<ApiMetrics> ApiMetrics { get; set; }
     public DbSet<ApiRequestLog> ApiRequestLogs { get; set; }
+    public DbSet<ApiScanResult> ApiScanResults { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
     public DbSet<BannedIp> BannedIps { get; set; }
     public DbSet<BotDetectionLog> BotDetectionLogs { get; set; }
-    public DbSet<DashboardWidget> DashboardWidgets { get; set; }
     public DbSet<EventLog> EventLogs { get; set; }
     public DbSet<IpBlock> IpBlocks { get; set; }
-    public DbSet<IpGeolocation> IpGeolocations { get; set; }
+    public DbSet<LatencyMetrics> LatencyMetrics { get; set; }
     public DbSet<NotificationPreference> NotificationPreferences { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<PacketInfo> PacketInfos { get; set; }
     public DbSet<RateLimitRule> RateLimitRules { get; set; }
     public DbSet<RateLimitViolation> RateLimitViolations { get; set; }
     public DbSet<RequestStatistics> RequestStatistics { get; set; }

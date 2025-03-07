@@ -91,8 +91,8 @@ namespace APIMonitor.server.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<DateTime>("RefreshTokenExpiry")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset>("RefreshTokenExpiry")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<bool>("RememberMe")
                         .HasColumnType("bit");
@@ -255,6 +255,48 @@ namespace APIMonitor.server.Migrations
                     b.ToTable("ApiRequestLogs");
                 });
 
+            modelBuilder.Entity("APIMonitor.server.Models.ApiScanResult", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BodySnippet")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("ColorHint")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.PrimitiveCollection<string>("Headers")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Health")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("LatencyId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LatencyId");
+
+                    b.ToTable("ApiScanResults");
+                });
+
             modelBuilder.Entity("APIMonitor.server.Models.AuditLog", b =>
                 {
                     b.Property<int>("Id")
@@ -368,54 +410,6 @@ namespace APIMonitor.server.Migrations
                     b.ToTable("BotDetectionLogs");
                 });
 
-            modelBuilder.Entity("APIMonitor.server.Models.DashboardWidget", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Configuration")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Height")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("LastUpdated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("PositionX")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PositionY")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("WidgetType")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Width")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("DashboardWidgets");
-                });
-
             modelBuilder.Entity("APIMonitor.server.Models.EventLog", b =>
                 {
                     b.Property<int>("Id")
@@ -474,7 +468,7 @@ namespace APIMonitor.server.Migrations
                     b.ToTable("IpBlocks");
                 });
 
-            modelBuilder.Entity("APIMonitor.server.Models.IpGeolocation", b =>
+            modelBuilder.Entity("APIMonitor.server.Models.LatencyMetrics", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -482,39 +476,24 @@ namespace APIMonitor.server.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Country")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Ipv4Address")
-                        .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("nvarchar(15)");
-
-                    b.Property<string>("Ipv6Address")
-                        .IsRequired()
-                        .HasMaxLength(39)
-                        .HasColumnType("nvarchar(39)");
-
-                    b.Property<string>("Latitude")
+                    b.Property<string>("Connect")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("Longitude")
+                    b.Property<string>("DnsResolution")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("TotalRequest")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("IpGeolocations");
+                    b.ToTable("LatencyMetrics");
                 });
 
             modelBuilder.Entity("APIMonitor.server.Models.Notification", b =>
@@ -579,6 +558,60 @@ namespace APIMonitor.server.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("NotificationPreferences");
+                });
+
+            modelBuilder.Entity("APIMonitor.server.Models.PacketInfo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("ApiScanResultId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DestinationIp")
+                        .IsRequired()
+                        .HasMaxLength(45)
+                        .HasColumnType("nvarchar(45)");
+
+                    b.Property<string>("DestinationMac")
+                        .IsRequired()
+                        .HasMaxLength(17)
+                        .HasColumnType("nvarchar(17)");
+
+                    b.Property<int>("Length")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PayloadPreview")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Protocol")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("SourceIp")
+                        .IsRequired()
+                        .HasMaxLength(45)
+                        .HasColumnType("nvarchar(45)");
+
+                    b.Property<string>("SourceMac")
+                        .IsRequired()
+                        .HasMaxLength(17)
+                        .HasColumnType("nvarchar(17)");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApiScanResultId");
+
+                    b.ToTable("PacketInfos");
                 });
 
             modelBuilder.Entity("APIMonitor.server.Models.RateLimitRule", b =>
@@ -716,11 +749,13 @@ namespace APIMonitor.server.Migrations
 
                     b.Property<string>("AccessToken")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("RefreshToken")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.HasKey("Id");
 
@@ -936,21 +971,21 @@ namespace APIMonitor.server.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("APIMonitor.server.Models.ApiScanResult", b =>
+                {
+                    b.HasOne("APIMonitor.server.Models.LatencyMetrics", "Latency")
+                        .WithMany()
+                        .HasForeignKey("LatencyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Latency");
+                });
+
             modelBuilder.Entity("APIMonitor.server.Models.AuditLog", b =>
                 {
                     b.HasOne("APIMonitor.server.Identity.User", "User")
                         .WithMany("AuditLogs")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("APIMonitor.server.Models.DashboardWidget", b =>
-                {
-                    b.HasOne("APIMonitor.server.Identity.User", "User")
-                        .WithMany("DashboardWidgets")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -989,6 +1024,13 @@ namespace APIMonitor.server.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("APIMonitor.server.Models.PacketInfo", b =>
+                {
+                    b.HasOne("APIMonitor.server.Models.ApiScanResult", null)
+                        .WithMany("Packets")
+                        .HasForeignKey("ApiScanResultId");
                 });
 
             modelBuilder.Entity("APIMonitor.server.Models.TrustedDevice", b =>
@@ -1070,11 +1112,14 @@ namespace APIMonitor.server.Migrations
 
                     b.Navigation("AuditLogs");
 
-                    b.Navigation("DashboardWidgets");
-
                     b.Navigation("EventLogs");
 
                     b.Navigation("Notifications");
+                });
+
+            modelBuilder.Entity("APIMonitor.server.Models.ApiScanResult", b =>
+                {
+                    b.Navigation("Packets");
                 });
 #pragma warning restore 612, 618
         }
