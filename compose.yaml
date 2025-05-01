@@ -1,0 +1,6 @@
+﻿services:
+  authapi:
+    image: authapi
+    build:
+      context: .
+      dockerfile: AuthApi/Dockerfile

@@ -75,9 +75,9 @@ internal class Program
                 }
             });
 
-        string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+        string connectionString = builder.Configuration.GetConnectionString("DefaultConnection")!;
 
-        builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString).EnableSensitiveDataLogging());
+        builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseMySQL(connectionString).EnableSensitiveDataLogging());
 
         builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
             {

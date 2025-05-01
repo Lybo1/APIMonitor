@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/APIMonitor.server.csproj": {}
+    "/home/lyuboslav/RiderProjects/APIMonitor/APIMonitor.server/APIMonitor.server.csproj": {}
   },
   "projects": {
-    "/home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/APIMonitor.server.csproj": {
+    "/home/lyuboslav/RiderProjects/APIMonitor/APIMonitor.server/APIMonitor.server.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/APIMonitor.server.csproj",
+        "projectUniqueName": "/home/lyuboslav/RiderProjects/APIMonitor/APIMonitor.server/APIMonitor.server.csproj",
         "projectName": "APIMonitor.server",
-        "projectPath": "/home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/APIMonitor.server.csproj",
+        "projectPath": "/home/lyuboslav/RiderProjects/APIMonitor/APIMonitor.server/APIMonitor.server.csproj",
         "packagesPath": "/home/lyuboslav/.nuget/packages/",
-        "outputPath": "/home/lyuboslav/Desktop/APIMonitor/APIMonitor.server/obj/",
+        "outputPath": "/home/lyuboslav/RiderProjects/APIMonitor/APIMonitor.server/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/home/lyuboslav/.nuget/NuGet/NuGet.Config"
@@ -38,7 +38,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.100"
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net9.0": {
@@ -192,6 +192,18 @@
               "target": "Package",
               "version": "[3.0.0, )"
             },
+            "MySql.Data": {
+              "target": "Package",
+              "version": "[9.2.0, )"
+            },
+            "MySql.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "MySqlConnector": {
+              "target": "Package",
+              "version": "[2.4.0, )"
+            },
             "Otp.NET": {
               "target": "Package",
               "version": "[1.4.0, )"
@@ -268,12 +280,6 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
-          "downloadDependencies": [
-            {
-              "name": "Microsoft.AspNetCore.App.Ref",
-              "version": "[9.0.2, 9.0.2]"
-            }
-          ],
           "frameworkReferences": {
             "Microsoft.AspNetCore.App": {
               "privateAssets": "none"
@@ -282,7 +288,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.103/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.203/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
