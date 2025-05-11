@@ -1,13 +1,11 @@
 using AuthApi.Models;
+using AuthApi.Services.AuthenticationServices.EmailServices.Interfaces;
 using MailKit.Net.Smtp;
 
 namespace AuthApi.Services.AuthenticationServices.EmailServices.Services;
 
 public class EmailService(SmtpClient smtpClient) : IEmailService
 {
-    
-    private readonly byte[] bytes = new byte[64];
-
 
     public async Task<EmailResponse> SendConfirmationEmailAsync(string toEmail, string username)
     {

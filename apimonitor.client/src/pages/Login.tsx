@@ -64,6 +64,10 @@ const LoginPage: React.FC = () => {
                     onSubmit={handleLogin}
                     className="space-y-4"
                 >
+                    <div className="flex items-center justify-center mb-4 ml-4 border-fu">
+                        <img src="/public/Logo_of_API_Monitor_App-removebg-preview.png" alt="API Monitor Logo" className="w-32 mb-8 mr-6" />
+                    </div>
+
                     <div className="mb-4">
                         <label className="block mb-2 text-green-400 font-bold">Email</label>
                         <motion.input

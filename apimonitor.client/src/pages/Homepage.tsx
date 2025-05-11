@@ -33,7 +33,6 @@ interface Notification {
     isRead: boolean;
 }
 
-// Error Boundary Component
 class ErrorBoundaryComponent extends React.Component<{ children: React.ReactNode }, { hasError: boolean, error: Error | null }> {
     constructor(props: { children: React.ReactNode }) {
         super(props);
@@ -130,11 +129,9 @@ const Homepage: React.FC = () => {
 
     const isAdmin = isAuthenticated && user?.roles?.some((role) => role.toLowerCase() === "admin");
 
-    // Command history state
     const [commandHistory, setCommandHistory] = useState<string[]>([]);
     const [historyIndex, setHistoryIndex] = useState(-1);
 
-    // Notification sound
     const notificationSound = useRef(new Audio("/notification.mp3")); // Replace with your audio file path
 
     useEffect(() => {
@@ -180,7 +177,7 @@ const Homepage: React.FC = () => {
                         style: { backgroundColor: "#2d3748", color: "#48bb78" },
                     });
                 }
-                refetchNotifications(); // Update notifications
+                refetchNotifications();
             });
 
             newConnection.on("Disconnected", (error: Error) => {
