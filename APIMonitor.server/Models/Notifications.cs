@@ -8,7 +8,7 @@ namespace APIMonitor.server.Models;
 
 public class Notification
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     
     [Required]
     [ForeignKey("User")]
