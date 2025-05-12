@@ -110,7 +110,7 @@ public class NotificationServiceTests
             Assert.Equal(title, notification?.Title);
             Assert.Equal(message, notification?.Message);
             
-            this.mockHubContext.Verify(h => h.Clients.Group(userId).SendAsync("ReceiveNotification", title, message, Times.Once);
+            this.mockHubContext.Verify(h=> h.Clients.Group(userId).SendAsync("ReceiveNotification", title, message, CancellationToken.None), Times.Once());
         }
 
         [Fact]

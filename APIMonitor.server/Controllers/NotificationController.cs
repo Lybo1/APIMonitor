@@ -40,7 +40,7 @@ public class NotificationController : ControllerBase
 
     [Authorize]
     [HttpPost("mark-as-read")]
-    public async Task<IActionResult> MarkAsRead([FromBody] int notificationId, HttpContext context)
+    public async Task<IActionResult> MarkAsRead([FromBody] Guid notificationId, HttpContext context)
     {
         string? userId = GetUserId();
 
