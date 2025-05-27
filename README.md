@@ -52,7 +52,7 @@ Whether running as a desktop app or web backend, it’s designed to operate 24/7
 | Language              | Usage                     |
 |-----------------------|---------------------------|
 | Angular + TypeScript | Web dashboard              |
-| Swift                | macOS/iOS UI               |
+| Swift                | macOS/IOS UI               |
 | Kotlin               | Android client             |
 | C++ (Qt)             | Windows/Linux native client|
 
