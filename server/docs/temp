@@ -1,0 +1,527 @@
+#include "../../include/scanner/http_headers_analyzer.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <curl/curl.h>
+#include <maxminddb.h>
+
+static const size_t MAX_HEADERS = 100;
+static const size_t MAX_RESULTS = 32;
+
+struct MemoryStruct {
+    char *memory;
+    size_t size;
+};
+
+static size_t write_callback(void *contents, size_t size, size_t nmemb, void *userp) {
+    size_t realsize = size * nmemb;
+    struct MemoryStruct *mem = (struct MemoryStruct *)userp;
+    if (!realsize) return 0;
+
+    char *ptr = realloc(mem->memory, mem->size + realsize + 1);
+    if (!ptr) {
+        fprintf(stderr, "Memory allocation failed\n");
+        return 0;
+    }
+    mem->memory = ptr;
+    memcpy(&(mem->memory[mem->size]), contents, realsize);
+    mem->size += realsize;
+    mem->memory[mem->size] = 0;
+    return realsize;
+}
+
+CURLcode perform_request(const char *url, struct MemoryStruct *chunk) {
+    CURL *curl = curl_easy_init();
+    if (!curl) return CURLE_FAILED_INIT;
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 5L);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)chunk);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
+    curl_easy_setopt(curl, CURLOPT_HEADER, 1L);
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (header-analyzer/1.0)");
+    CURLcode res = curl_easy_perform(curl);
+    long code = 0;
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &code);
+    if (res == CURLE_OK && code >= 400)
+        res = CURLE_HTTP_RETURNED_ERROR;
+    curl_easy_cleanup(curl);
+    return res;
+}
+
+Header* parse_headers(const char *response, int *header_count) {
+    *header_count = 0;
+    if (!response) return NULL;
+    const char *eoh = strstr(response, "\r\n\r\n");
+    if (!eoh) return NULL;
+    // Count actual headers
+    const char *p = response;
+    int count = 0;
+    while(p < eoh) {
+        const char *eol = strstr(p, "\r\n");
+        if (!eol || eol > eoh) break;
+        if (strchr(p, ':') != NULL && p != response) // skip the first status line
+            count++;
+        p = eol + 2;
+    }
+    if (count == 0) return NULL;
+    Header *headers = calloc(count, sizeof(Header));
+    if (!headers) return NULL;
+    p = strchr(response, '\n');
+    if (!p) { free(headers); return NULL; }
+    p++; // skip status
+    int idx = 0;
+    while(p < eoh && idx < count) {
+        const char *eol = strstr(p, "\r\n");
+        if (!eol) break;
+        const char *colon = strchr(p, ':');
+        if (!colon || colon > eol) { p = eol + 2; continue; }
+        size_t klen = colon - p;
+        size_t vlen = eol - (colon + 1);
+        while (klen > 0 && isspace(p[klen-1])) klen--;
+        headers[idx].key = strndup(p, klen);
+        if (!headers[idx].key) break;
+        const char *vstart = colon + 1;
+        while(vlen > 0 && isspace(*vstart)) { vstart++; vlen--; }
+        while(vlen > 0 && isspace(vstart[vlen-1])) vlen--;
+        headers[idx].value = strndup(vstart, vlen);
+        if (!headers[idx].value) { free(headers[idx].key); break; }
+        idx++;
+        p = eol + 2;
+    }
+    *header_count = idx;
+    return headers;
+}
+
+static const char* find_header_value(const Header *headers, int count, const char *key) {
+    for (int i = 0; i < count; i++)
+        if (strcasecmp(headers[i].key, key) == 0)
+            return headers[i].value;
+    return NULL;
+}
+
+// Report every header that is seen
+AnalysisResult* analyze_headers(const Header *headers, int header_count, int *result_count) {
+    *result_count = 0;
+    AnalysisResult *results = calloc(MAX_RESULTS, sizeof(AnalysisResult));
+    if (!results) return NULL;
+    int idx = 0;
+    int score = 100;
+
+    // Specify checks for common headers (expand as needed)
+#define ADD_RESULT(_name,_impact,_msg) do{ \
+    if(idx<MAX_RESULTS) {\
+      results[idx].header_name=(_name);\
+      results[idx].score_impact=(_impact);\
+      results[idx].message=strdup((_msg));\
+      idx++;\
+    }\
+}while(0)
+
+    // HSTS
+    const char *hsts = find_header_value(headers, header_count, "Strict-Transport-Security");
+    if (hsts && strstr(hsts, "max-age=")) {
+        long max_age = strtol(strstr(hsts, "max-age=") + 8, NULL, 10);
+        if (max_age >= 31536000) {
+            ADD_RESULT("HSTS", 10, "HSTS: strong max-age >= 1yr");
+            score += 10;
+        } else {
+            ADD_RESULT("HSTS", -10, "HSTS: max-age too short (<1yr)");
+            score -= 10;
+        }
+    } else if (!hsts) {
+        ADD_RESULT("HSTS", -20, "HSTS: header missing");
+        score -= 20;
+    } else {
+        ADD_RESULT("HSTS", -10, "HSTS: present but max-age missing");
+        score -= 10;
+    }
+
+    // CSP
+    const char *csp = find_header_value(headers, header_count, "Content-Security-Policy");
+    if (csp) {
+        if (!strstr(csp, "unsafe-inline") && !strstr(csp, "unsafe-eval")) {
+            ADD_RESULT("CSP", 15, "CSP: strong policy");
+            score += 15;
+        } else {
+            ADD_RESULT("CSP", -10, "CSP: allows unsafe-inline or eval");
+            score -= 10;
+        }
+    } else {
+        ADD_RESULT("CSP", -15, "CSP header missing");
+        score -= 15;
+    }
+
+    // X-Frame-Options
+    const char *xfo = find_header_value(headers, header_count, "X-Frame-Options");
+    if (xfo && (strcmp(xfo,"DENY")==0 || strcmp(xfo,"SAMEORIGIN")==0)) {
+        ADD_RESULT("X-Frame-Options", 10, "X-Frame-Options: DENY/SAMEORIGIN");
+        score += 10;
+    } else if (xfo) {
+        ADD_RESULT("X-Frame-Options", -10, "X-Frame-Options: Misconfigured");
+        score -= 10;
+    } else {
+        ADD_RESULT("X-Frame-Options", -10, "X-Frame-Options: missing");
+        score -= 10;
+    }
+
+    // X-Content-Type-Options
+    const char *xcto = find_header_value(headers, header_count, "X-Content-Type-Options");
+    if (xcto && (strcasecmp(xcto, "nosniff") == 0)) {
+        ADD_RESULT("X-Content-Type-Options", 5, "X-Content-Type-Options: nosniff");
+        score += 5;
+    } else {
+        ADD_RESULT("X-Content-Type-Options", -5, "X-Content-Type-Options: missing or misconfigured");
+        score -= 5;
+    }
+
+    // Referrer-Policy
+    const char *ref = find_header_value(headers, header_count, "Referrer-Policy");
+    if (ref && strcasecmp(ref, "strict-origin-when-cross-origin") == 0) {
+        ADD_RESULT("Referrer-Policy", 5, "Referrer-Policy: strict-origin-when-cross-origin");
+        score += 5;
+    } else {
+        ADD_RESULT("Referrer-Policy", -5, "Referrer-Policy: missing or misconfigured");
+        score -= 5;
+    }
+
+    // Permissions-Policy
+    const char *perm = find_header_value(headers, header_count, "Permissions-Policy");
+    if (perm) {
+        ADD_RESULT("Permissions-Policy", 5, "Permissions-Policy present");
+        score += 5;
+    } else {
+        ADD_RESULT("Permissions-Policy", -5, "Permissions-Policy missing");
+        score -= 5;
+    }
+
+    // COOP
+    const char *coop = find_header_value(headers, header_count, "Cross-Origin-Opener-Policy");
+    if (coop && strcmp(coop, "same-origin") == 0) {
+        ADD_RESULT("COOP", 5, "COOP: same-origin");
+        score += 5;
+    } else {
+        ADD_RESULT("COOP", -5, "COOP missing or misconfigured");
+        score -= 5;
+    }
+
+    // COEP
+    const char *coep = find_header_value(headers, header_count, "Cross-Origin-Embedder-Policy");
+    if (coep && strcmp(coep, "require-corp") == 0) {
+        ADD_RESULT("COEP", 5, "COEP: require-corp");
+        score += 5;
+    } else {
+        ADD_RESULT("COEP", -5, "COEP missing or misconfigured");
+        score -= 5;
+    }
+
+    // CORP
+    const char *corp = find_header_value(headers, header_count, "Cross-Origin-Resource-Policy");
+    if (corp && strcmp(corp, "same-site") == 0) {
+        ADD_RESULT("CORP", 5, "CORP: same-site");
+        score += 5;
+    } else {
+        ADD_RESULT("CORP", -5, "CORP missing or misconfigured");
+        score -= 5;
+    }
+
+    // CORS
+    const char *acao = find_header_value(headers, header_count, "Access-Control-Allow-Origin");
+    if (acao && strcmp(acao, "*") != 0) {
+        ADD_RESULT("CORS", 5, "CORS: restricts origins");
+        score += 5;
+    } else if (acao) {
+        ADD_RESULT("CORS", -5, "CORS: wildcard allowed");
+        score -= 5;
+    } else {
+        ADD_RESULT("CORS", 0, "CORS not set (may not be needed)");
+    }
+
+    // X-XSS-Protection (deprecated/check for legacy configs)
+    const char *xxss = find_header_value(headers, header_count, "X-XSS-Protection");
+    if (!xxss || strcmp(xxss, "0") == 0) {
+        ADD_RESULT("X-XSS-Protection", 5, "X-XSS-Protection not set or disabled (OK)");
+        score += 5;
+    } else {
+        ADD_RESULT("X-XSS-Protection", -5, "X-XSS-Protection set (deprecated)");
+        score -= 5;
+    }
+
+    // Server
+    const char *server = find_header_value(headers, header_count, "Server");
+    if (server && strlen(server) > 10) {
+        ADD_RESULT("Server", -5, "Server header reveals too much info");
+        score -= 5;
+    } else {
+        ADD_RESULT("Server", 5, "Server header minimal or missing");
+        score += 5;
+    }
+
+    // X-Powered-By
+    const char *xpb = find_header_value(headers, header_count, "X-Powered-By");
+    if (!xpb) {
+        ADD_RESULT("X-Powered-By", 5, "X-Powered-By not present");
+        score += 5;
+    } else {
+        ADD_RESULT("X-Powered-By", -5, "X-Powered-By present (info leakage)");
+        score -= 5;
+    }
+
+    // Content-Type
+    const char *ctype = find_header_value(headers, header_count, "Content-Type");
+    if (ctype) {
+        ADD_RESULT("Content-Type", 5, "Content-Type set");
+        score += 5;
+    } else {
+        ADD_RESULT("Content-Type", -5, "Content-Type missing");
+        score -= 5;
+    }
+
+    // All other headers: show their existence for transparency
+    for (int i = 0; i < header_count; i++) {
+        const char *known[] = {
+            "Strict-Transport-Security", "Content-Security-Policy", "X-Frame-Options",
+            "X-Content-Type-Options", "Referrer-Policy", "Permissions-Policy",
+            "Cross-Origin-Opener-Policy", "Cross-Origin-Embedder-Policy",
+            "Cross-Origin-Resource-Policy", "Access-Control-Allow-Origin",
+            "X-XSS-Protection", "Server", "X-Powered-By", "Content-Type"
+        };
+        int is_known = 0;
+        for (size_t j = 0; j < sizeof(known)/sizeof(known[0]); j++) {
+            if (strcasecmp(headers[i].key, known[j]) == 0) { is_known = 1; break; }
+        }
+        if (!is_known && idx < MAX_RESULTS) {
+            char buf[256];
+            snprintf(buf, sizeof(buf), "Value: %s", headers[i].value);
+            ADD_RESULT(headers[i].key, 0, buf);
+        }
+    }
+
+    // Bounded score
+    if (score < 0) score = 0;
+    if (score > 100) score = 100;
+    ADD_RESULT("Final Score", score, "Overall security score");
+    *result_count = idx;
+    return results;
+#undef ADD_RESULT
+}
+
+void print_report(const AnalysisResult *results, int result_count) {
+    printf("\n=== HTTP Headers Analysis Report ===\n");
+    int final_score = -1;
+    for (int i = 0; i < result_count; i++) {
+        if (!results[i].header_name || !results[i].message) continue;
+        if (strcmp(results[i].header_name, "Final Score") == 0) {
+            final_score = results[i].score_impact;
+            continue;
+        }
+        printf("%-25s: %s (Score Impact: %d)\n",
+                results[i].header_name, results[i].message, results[i].score_impact);
+    }
+    if (final_score >= 0) {
+        printf("\nFinal Security Score: %d/100\n", final_score);
+        printf("Grade: %s\n",
+            final_score >= 90 ? "A" :
+            final_score >= 75 ? "B" :
+            final_score >= 60 ? "C" :
+            final_score >= 40 ? "D" : "F");
+    }
+}
+
+void free_headers(Header *headers, int header_count) {
+    if (!headers) return;
+    for (int i = 0; i < header_count; i++) {
+        free(headers[i].key);
+        free(headers[i].value);
+    }
+    free(headers);
+}
+
+void free_results(AnalysisResult *results, int result_count) {
+    if (!results) return;
+    for (int i = 0; i < result_count; i++)
+        free(results[i].message);
+    free(results);
+}
+
+struct GeoResponse {
+    char *memory;
+    size_t size;
+};
+
+static size_t geo_write_callback(void *contents, size_t size, size_t nmemb, void *userp) {
+    size_t realsize = size * nmemb;
+    struct GeoResponse *mem = (struct GeoResponse *)userp;
+    char *ptr = realloc(mem->memory, mem->size + realsize + 1);
+    if(!ptr) return 0;
+    mem->memory = ptr;
+    memcpy(&(mem->memory[mem->size]), contents, realsize);
+    mem->size += realsize;
+    mem->memory[mem->size] = 0;
+    return realsize;
+}
+
+// Return string IP, or NULL if failed
+char *resolve_ip(const char *hostname) {
+    struct addrinfo hints = {0}, *res;
+    hints.ai_family = AF_INET;
+    if (getaddrinfo(hostname, NULL, &hints, &res) != 0) return NULL;
+    struct sockaddr_in *addr = (struct sockaddr_in *)res->ai_addr;
+    char *ip = malloc(INET_ADDRSTRLEN);
+    if (!ip) { freeaddrinfo(res); return NULL; }
+    inet_ntop(AF_INET, &(addr->sin_addr), ip, INET_ADDRSTRLEN);
+    freeaddrinfo(res);
+    return ip;
+}
+
+// Returns a malloc()'d buffer (json string) or NULL
+char *geo_lookup(const char *ip) {
+    CURL *curl = curl_easy_init();
+    if (!curl) return NULL;
+    struct GeoResponse geo = { .memory = malloc(1), .size = 0 };
+    if (!geo.memory) { curl_easy_cleanup(curl); return NULL; }
+
+    char url[128];
+    snprintf(url, sizeof(url), "http://ip-api.com/json/%s", ip);
+
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, geo_write_callback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &geo);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 5L);
+    CURLcode rc = curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+
+    if (rc != CURLE_OK) { free(geo.memory); return NULL; }
+    return geo.memory; // JSON response string
+}
+
+// Helper: Write HTML body to file (returns 0 if ok)
+int write_html_to_file(const char *response, const char *filename) {
+    const char *body = strstr(response, "\r\n\r\n");
+    if (!body) return -1;
+    body += 4;
+    FILE *f = fopen(filename, "w");
+    if (!f) return -2;
+    fwrite(body, 1, strlen(body), f);
+    fclose(f);
+    return 0;
+}
+
+// Helper: Extract host from URL (naive, valid for http[s]://host[:port][/...])
+void extract_host_from_url(const char *url, char *host, size_t maxlen) {
+    const char *p = strstr(url, "://");
+    p = p ? p+3 : url;
+    size_t i = 0;
+    while (p[i] && p[i] != '/' && p[i] != ':' && i < maxlen-1) {
+        host[i] = p[i];
+        i++;
+    }
+    host[i] = 0;
+}
+
+// MaxMind geo lookup routine -- returns malloc'd string with geo data, or NULL
+char *geo_lookup_mmdb(const char *db_path, const char *ip) {
+    MMDB_s mmdb;
+    int status = MMDB_open(db_path, MMDB_MODE_MMAP, &mmdb);
+    if (status != MMDB_SUCCESS) return NULL;
+    int gai_error, mmdb_error;
+    MMDB_lookup_result_s result = MMDB_lookup_string(&mmdb, ip, &gai_error, &mmdb_error);
+    if (gai_error != 0 || mmdb_error != MMDB_SUCCESS || !result.found_entry) {
+        MMDB_close(&mmdb);
+        return NULL;
+    }
+    MMDB_entry_data_s entry;
+    char country[64] = "", city[64] = "", as[64] = "";
+    double lat = 0, lon = 0;
+
+    if (MMDB_get_value(&result.entry, &entry, "country", "names", "en", NULL) == MMDB_SUCCESS && entry.has_data)
+        snprintf(country, sizeof(country), "%.*s", entry.data_size, entry.utf8_string);
+
+    if (MMDB_get_value(&result.entry, &entry, "city", "names", "en", NULL) == MMDB_SUCCESS && entry.has_data)
+        snprintf(city, sizeof(city), "%.*s", entry.data_size, entry.utf8_string);
+
+    if (MMDB_get_value(&result.entry, &entry, "location", "latitude", NULL) == MMDB_SUCCESS && entry.has_data)
+        lat = entry.double_value;
+
+    if (MMDB_get_value(&result.entry, &entry, "location", "longitude", NULL) == MMDB_SUCCESS && entry.has_data)
+        lon = entry.double_value;
+
+    // ASN/Org lookup (works if using GeoLite2-ASN.mmdb)
+    if (MMDB_get_value(&result.entry, &entry, "autonomous_system_organization", NULL) == MMDB_SUCCESS && entry.has_data)
+        snprintf(as, sizeof(as), "%.*s", entry.data_size, entry.utf8_string);
+
+    char *info = malloc(256);
+    snprintf(info, 256, "Country: %s\nCity: %s\nLat/Lon: %.4f, %.4f\nASN/Org: %s\n", country, city, lat, lon, as);
+    MMDB_close(&mmdb);
+    return info;
+}
+
+// Main function to fetch, analyze, and print required info
+int analyze_url(const char *url, const char *mmdb_path) {
+    struct MemoryStruct chunk = { .memory = malloc(1), .size = 0 };
+    if (!chunk.memory) return -1;
+
+    CURLcode res = perform_request(url, &chunk);
+    if (res != CURLE_OK) {
+        fprintf(stderr, "Error fetching URL: %s\n", curl_easy_strerror(res));
+        free(chunk.memory);
+        return -1;
+    }
+
+    // Write HTML body to file
+    const char *out_file = "output.html";
+    if (write_html_to_file(chunk.memory, out_file) == 0)
+        printf("\nThe HTML can be found at this file: %s\n\n", out_file);
+    else
+        printf("\n[!] Failed to write HTML file\n\n");
+
+    // Parse headers
+    int header_count = 0;
+    Header *headers = parse_headers(chunk.memory, &header_count);
+
+    printf("HTTP Headers:\n");
+    for (int i = 0; i < header_count; i++)
+        printf("%s: %s\n", headers[i].key, headers[i].value);
+
+    int result_count = 0;
+    AnalysisResult *results = analyze_headers(headers, header_count, &result_count);
+    print_report(results, result_count);
+
+    // --- Geo lookup
+    char host[128] = "";
+    extract_host_from_url(url, host, sizeof(host));
+    char *ip = resolve_ip(host);
+
+    printf("\nGeo Information:\n");
+    char *geo = NULL;
+    if (ip && mmdb_path)
+        geo = geo_lookup_mmdb(mmdb_path, ip);
+
+    if (geo) {
+        printf("%s", geo);
+        free(geo);
+    } else {
+        // Fallback to HTTP API if mmdb lookup fails
+        char *geo_json = geo_lookup(ip);
+        if (geo_json) {
+            printf("API geo (ip-api.com): %s\n", geo_json);
+            free(geo_json);
+        } else {
+            printf("[!] Geo lookup failed.\n");
+        }
+    }
+    free(ip);
+
+    // Cleanup
+    free_headers(headers, header_count);
+    free_results(results, result_count);
+    free(chunk.memory);
+    return 0;
+}
+

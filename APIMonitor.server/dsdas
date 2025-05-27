@@ -1,0 +1,517 @@
+## Me
+Start restoring packages for solution
+Credential provider preference: Rider
+@ Restoring packages in solution APIMonitor started
+@   RestorePackagesConfig: Start
+@   There are no packages in solution
+@   RestorePackagesConfig: Finish
+@   RestorePackageReferences: Start
+@   Restoring NuGet packages for integrated projects: start
+@   RestoreEngine = Embedded (Automatic)
+@   Valid fallback folders: []
+Running restore with 12 concurrent jobs.
+Reading project file /home/lyuboslav/RiderProjects/APIMonitor/APIMonitor.server/APIMonitor.server.csproj.
+Reading project file /home/lyuboslav/RiderProjects/APIMonitor/AuthApi/AuthApi.csproj.
+The restore inputs for 'AuthApi' have not changed. No further actions are required to complete the restore.
+The restore inputs for 'APIMonitor.server' have changed. Continuing restore.
+Committing restore...
+Assets file has not changed. Skipping assets file writing. Path: /home/lyuboslav/RiderProjects/APIMonitor/AuthApi/obj/project.assets.json
+No-Op restore. The cache will not be updated. Path: /home/lyuboslav/RiderProjects/APIMonitor/AuthApi/obj/project.nuget.cache
+Restored /home/lyuboslav/RiderProjects/APIMonitor/AuthApi/AuthApi.csproj (in 50 ms).
+Restoring packages for /home/lyuboslav/RiderProjects/APIMonitor/APIMonitor.server/APIMonitor.server.csproj...
+  GET https://api.nuget.org/v3/vulnerabilities/index.json
+  OK https://api.nuget.org/v3/vulnerabilities/index.json 37ms
+  GET https://api.nuget.org/v3-vulnerabilities/2025.05.15.05.31.02/vulnerability.base.json
+  GET https://api.nuget.org/v3-vulnerabilities/2025.05.15.05.31.02/2025.05.17.23.31.11/vulnerability.update.json
+  OK https://api.nuget.org/v3-vulnerabilities/2025.05.15.05.31.02/vulnerability.base.json 12ms
+  OK https://api.nuget.org/v3-vulnerabilities/2025.05.15.05.31.02/2025.05.17.23.31.11/vulnerability.update.json 25ms
+Warning As Error: Detected package downgrade: Microsoft.EntityFrameworkCore from 9.0.5 to 9.0.1. Reference the package directly from the project to select a different version. 
+ APIMonitor.server -> Microsoft.EntityFrameworkCore.InMemory 9.0.5 -> Microsoft.EntityFrameworkCore (>= 9.0.5) 
+ APIMonitor.server -> Microsoft.EntityFrameworkCore (>= 9.0.1)
+Warning As Error: Detected package downgrade: Microsoft.Extensions.Caching.Memory from 9.0.5 to 9.0.2. Reference the package directly from the project to select a different version. 
+ APIMonitor.server -> Microsoft.EntityFrameworkCore.InMemory 9.0.5 -> Microsoft.Extensions.Caching.Memory (>= 9.0.5) 
+ APIMonitor.server -> Microsoft.Extensions.Caching.Memory (>= 9.0.2)
+All packages and projects are compatible with net9.0.
+Committing restore...
+Writing assets file to disk. Path: /home/lyuboslav/RiderProjects/APIMonitor/APIMonitor.server/obj/project.assets.json
+Writing cache file to disk. Path: /home/lyuboslav/RiderProjects/APIMonitor/APIMonitor.server/obj/project.nuget.cache
+Persisting dg to /home/lyuboslav/RiderProjects/APIMonitor/APIMonitor.server/obj/APIMonitor.server.csproj.nuget.dgspec.json
+Failed to restore /home/lyuboslav/RiderProjects/APIMonitor/APIMonitor.server/APIMonitor.server.csproj (in 1.82 sec).
+@   Restoring NuGet packages for integrated projects: finish
+@   RestorePackageReferences: Finish
+@   Updating restore marks for affected project AuthApi.csproj
+@   Updating restore marks for affected project APIMonitor.server.csproj
+@   Updating restore marks for project APIMonitor.server.csproj
+@   Restore result: Affected projects: APIMonitor.server; Affected packages folders: /home/lyuboslav/.nuget/packages
+@ Restoring packages in solution APIMonitor finished (2.243 sec)
+Finish restoring packages for solution
+@ Installing Microsoft.AspNetCore.Authorization in APIMonitor.server started
+Running restore with 12 concurrent jobs.
+Reading project file /home/lyuboslav/RiderProjects/APIMonitor/APIMonitor.server/APIMonitor.server.csproj.
+Restoring packages for /home/lyuboslav/RiderProjects/APIMonitor/APIMonitor.server/APIMonitor.server.csproj...
+  GET https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.authorization/index.json
+  OK https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.authorization/index.json 171ms
+  GET https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.authorization/8.0.1/microsoft.aspnetcore.authorization.8.0.1.nupkg
+  OK https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.authorization/8.0.1/microsoft.aspnetcore.authorization.8.0.1.nupkg 21ms
+  GET https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.metadata/index.json
+  GET https://api.nuget.org/v3-flatcontainer/microsoft.extensions.options/index.json
+  OK https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.metadata/index.json 143ms
+  OK https://api.nuget.org/v3-flatcontainer/microsoft.extensions.options/index.json 175ms
+  GET https://api.nuget.org/v3-flatcontainer/microsoft.extensions.options/8.0.1/microsoft.extensions.options.8.0.1.nupkg
+  GET https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.metadata/8.0.1/microsoft.aspnetcore.metadata.8.0.1.nupkg
+  OK https://api.nuget.org/v3-flatcontainer/microsoft.extensions.options/8.0.1/microsoft.extensions.options.8.0.1.nupkg 51ms
+  OK https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.metadata/8.0.1/microsoft.aspnetcore.metadata.8.0.1.nupkg 124ms
+Acquiring lock for the installation of Microsoft.Extensions.Options 8.0.1
+Acquired lock for the installation of Microsoft.Extensions.Options 8.0.1
+Acquiring lock for the installation of Microsoft.AspNetCore.Metadata 8.0.1
+Acquired lock for the installation of Microsoft.AspNetCore.Metadata 8.0.1
+Acquiring lock for the installation of Microsoft.AspNetCore.Authorization 8.0.1
+Acquired lock for the installation of Microsoft.AspNetCore.Authorization 8.0.1
+Installed Microsoft.AspNetCore.Metadata 8.0.1 from https://api.nuget.org/v3/index.json to /home/lyuboslav/.nuget/packages/microsoft.aspnetcore.metadata/8.0.1 with content hash 8Uyh4D/9Z9xfL1f6Ap9Y12q/JU717sqWNMxCD7lytyK28YFtLIYG1jSCQOq+TvPDzgIaaGXGtLq+lM8fcAisMg==.
+Installed Microsoft.Extensions.Options 8.0.1 from https://api.nuget.org/v3/index.json to /home/lyuboslav/.nuget/packages/microsoft.extensions.options/8.0.1 with content hash wmpp+BSU3oGifaev6Z9rrlwHoITLFfpVOSbgBrOXjkbJSCXnZVCsoRGE5c3fJFI4VlNgnNkNlI9y+5jC4fmOEA==.
+Installed Microsoft.AspNetCore.Authorization 8.0.1 from https://api.nuget.org/v3/index.json to /home/lyuboslav/.nuget/packages/microsoft.aspnetcore.authorization/8.0.1 with content hash RYBk9d+Zb6V2u2hpgSSlCTvV6HvNf8T8OA7coLn+J4sdWLbdVkb8/b2tpRRENTGXK31ayCvtUPhP4wv2ZMn4cQ==.
+  CACHE https://api.nuget.org/v3/vulnerabilities/index.json
+  CACHE https://api.nuget.org/v3-vulnerabilities/2025.05.15.05.31.02/vulnerability.base.json
+  CACHE https://api.nuget.org/v3-vulnerabilities/2025.05.15.05.31.02/2025.05.17.23.31.11/vulnerability.update.json
+Warning As Error: Detected package downgrade: Microsoft.EntityFrameworkCore from 9.0.5 to 9.0.1. Reference the package directly from the project to select a different version. 
+ APIMonitor.server -> Microsoft.EntityFrameworkCore.InMemory 9.0.5 -> Microsoft.EntityFrameworkCore (>= 9.0.5) 
+ APIMonitor.server -> Microsoft.EntityFrameworkCore (>= 9.0.1)
+Warning As Error: Detected package downgrade: Microsoft.Extensions.Caching.Memory from 9.0.5 to 9.0.2. Reference the package directly from the project to select a different version. 
+ APIMonitor.server -> Microsoft.EntityFrameworkCore.InMemory 9.0.5 -> Microsoft.Extensions.Caching.Memory (>= 9.0.5) 
+ APIMonitor.server -> Microsoft.Extensions.Caching.Memory (>= 9.0.2)
+All packages and projects are compatible with net9.0.
+Package restore failed. Rolling back package changes for 'APIMonitor.server'.
+Warning As Error: Detected package downgrade: Microsoft.EntityFrameworkCore from 9.0.5 to 9.0.1. Reference the package directly from the project to select a different version. 
+ APIMonitor.server -> Microsoft.EntityFram ... g.Memory from 9.0.5 to 9.0.2. Reference the package directly from the project to select a different version. 
+ APIMonitor.server -> Microsoft.EntityFrameworkCore.InMemory 9.0.5 -> Microsoft.Extensions.Caching.Memory (>= 9.0.5) 
+ APIMonitor.server -> Microsoft.Extensions.Caching.Memory (>= 9.0.2)
+
+NuGet.PackageManagement.PackageReferenceRollbackException: Package restore failed. Rolling back package changes for 'APIMonitor.server'.
+   at NuGet.PackageManagement.NuGetPackageManager.ExecuteBuildIntegratedProjectActionsAsync(BuildIntegratedNuGetProject buildIntegratedProject, IEnumerable`1 nuGetProjectActions, INuGetProjectContext nuGetProjectContext, CancellationToken token)
+   at NuGet.PackageManagement.NuGetPackageManager.ExecuteNuGetProjectActionsAsync(NuGetProject nuGetProject, IEnumerable`1 nuGetProjectActions, INuGetProjectContext nuGetProjectContext, PackageDownloadContext downloadContext, CancellationToken token)
+   at NuGet.PackageManagement.NuGetPackageManager.InstallPackageAsync(NuGetProject nuGetProject, PackageIdentity packageIdentity, ResolutionContext resolutionContext, INuGetProjectContext nuGetProjectContext, PackageDownloadContext downloadContext, IEnumerable`1 primarySources, IEnumerable`1 secondarySources, CancellationToken token)
+   at NuGet.PackageManagement.NuGetPackageManager.InstallPackageAsync(NuGetProject nuGetProject, PackageIdentity packageIdentity, ResolutionContext resolutionContext, INuGetProjectContext nuGetProjectContext, IEnumerable`1 primarySources, IEnumerable`1 secondarySources, CancellationToken token)
+   at JetBrains.ProjectModel.NuGet.Operations.NuGetInstallOperation.<>c__DisplayClass7_0.<<InstallAsync>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at JetBrains.ProjectModel.NuGet.Operations.NuGetInstallOperation.InstallInternal(IProject project, String packageId, String packgeUserStr, NuGetFeedContext feedContext, Int32 nestedLevel, NuGetNotificationMode mode, NuGetOperationReporter reporter, Func`3 nativeInstall, NuGetProject givenNuGetProject)
+
+Warning As Error: Detected package downgrade: Microsoft.EntityFrameworkCore from 9.0.5 to 9.0.1. Reference the package directly from the project to select a different version. 
+ APIMonitor.server -> Microsoft.EntityFrameworkCore.InMemory 9.0.5 -> Microsoft.EntityFrameworkCore (>= 9.0.5) 
+ APIMonitor.server -> Microsoft.EntityFrameworkCore (>= 9.0.1)
+Warning As Error: Detected package downgrade: Microsoft.Extensions.Caching.Memory from 9.0.5 to 9.0.2. Reference the package directly from the project to select a different version. 
+ APIMonitor.server -> Microsoft.EntityFrameworkCore.InMemory 9.0.5 -> Microsoft.Extensions.Caching.Memory (>= 9.0.5) 
+ APIMonitor.server -> Microsoft.Extensions.Caching.Memory (>= 9.0.2)
+@ Installing Microsoft.AspNetCore.Authorization in APIMonitor.server finished (4.583 sec)
+[Notification][Install] Install failed (project: APIMonitor.server, package: Microsoft.AspNetCore.Authorization v8.0.1)
+Package restore failed. Rolling back package changes for 'APIMonitor.server'.
+Warning As Error: Detected package downgrade: Microsoft.EntityFrameworkCore from 9.0.5 to 9.0.1. Reference the package directly from the project to select a different version. 
+ APIMonitor.server -> Microsoft.EntityFram ... g.Memory from 9.0.5 to 9.0.2. Reference the package directly from the project to select a different version. 
+ APIMonitor.server -> Microsoft.EntityFrameworkCore.InMemory 9.0.5 -> Microsoft.Extensions.Caching.Memory (>= 9.0.5) 
+ APIMonitor.server -> Microsoft.Extensions.Caching.Memory (>= 9.0.2)
+
+@ Installing Microsoft.AspNetCore.Authorization in APIMonitor.server started
+Running restore with 12 concurrent jobs.
+Reading project file /home/lyuboslav/RiderProjects/APIMonitor/APIMonitor.server/APIMonitor.server.csproj.
+Restoring packages for /home/lyuboslav/RiderProjects/APIMonitor/APIMonitor.server/APIMonitor.server.csproj...
+  CACHE https://api.nuget.org/v3/vulnerabilities/index.json
+  CACHE https://api.nuget.org/v3-vulnerabilities/2025.05.15.05.31.02/vulnerability.base.json
+  CACHE https://api.nuget.org/v3-vulnerabilities/2025.05.15.05.31.02/2025.05.17.23.31.11/vulnerability.update.json
+Warning As Error: Detected package downgrade: Microsoft.EntityFrameworkCore from 9.0.5 to 9.0.1. Reference the package directly from the project to select a different version. 
+ APIMonitor.server -> Microsoft.EntityFrameworkCore.InMemory 9.0.5 -> Microsoft.EntityFrameworkCore (>= 9.0.5) 
+ APIMonitor.server -> Microsoft.EntityFrameworkCore (>= 9.0.1)
+Warning As Error: Detected package downgrade: Microsoft.Extensions.Caching.Memory from 9.0.5 to 9.0.2. Reference the package directly from the project to select a different version. 
+ APIMonitor.server -> Microsoft.EntityFrameworkCore.InMemory 9.0.5 -> Microsoft.Extensions.Caching.Memory (>= 9.0.5) 
+ APIMonitor.server -> Microsoft.Extensions.Caching.Memory (>= 9.0.2)
+All packages and projects are compatible with net9.0.
+Package restore failed. Rolling back package changes for 'APIMonitor.server'.
+Warning As Error: Detected package downgrade: Microsoft.EntityFrameworkCore from 9.0.5 to 9.0.1. Reference the package directly from the project to select a different version. 
+ APIMonitor.server -> Microsoft.EntityFram ... g.Memory from 9.0.5 to 9.0.2. Reference the package directly from the project to select a different version. 
+ APIMonitor.server -> Microsoft.EntityFrameworkCore.InMemory 9.0.5 -> Microsoft.Extensions.Caching.Memory (>= 9.0.5) 
+ APIMonitor.server -> Microsoft.Extensions.Caching.Memory (>= 9.0.2)
+
+NuGet.PackageManagement.PackageReferenceRollbackException: Package restore failed. Rolling back package changes for 'APIMonitor.server'.
+   at NuGet.PackageManagement.NuGetPackageManager.ExecuteBuildIntegratedProjectActionsAsync(BuildIntegratedNuGetProject buildIntegratedProject, IEnumerable`1 nuGetProjectActions, INuGetProjectContext nuGetProjectContext, CancellationToken token)
+   at NuGet.PackageManagement.NuGetPackageManager.ExecuteNuGetProjectActionsAsync(NuGetProject nuGetProject, IEnumerable`1 nuGetProjectActions, INuGetProjectContext nuGetProjectContext, PackageDownloadContext downloadContext, CancellationToken token)
+   at NuGet.PackageManagement.NuGetPackageManager.InstallPackageAsync(NuGetProject nuGetProject, PackageIdentity packageIdentity, ResolutionContext resolutionContext, INuGetProjectContext nuGetProjectContext, PackageDownloadContext downloadContext, IEnumerable`1 primarySources, IEnumerable`1 secondarySources, CancellationToken token)
+   at NuGet.PackageManagement.NuGetPackageManager.InstallPackageAsync(NuGetProject nuGetProject, PackageIdentity packageIdentity, ResolutionContext resolutionContext, INuGetProjectContext nuGetProjectContext, IEnumerable`1 primarySources, IEnumerable`1 secondarySources, CancellationToken token)
+   at JetBrains.ProjectModel.NuGet.Operations.NuGetInstallOperation.<>c__DisplayClass7_0.<<InstallAsync>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at JetBrains.ProjectModel.NuGet.Operations.NuGetInstallOperation.InstallInternal(IProject project, String packageId, String packgeUserStr, NuGetFeedContext feedContext, Int32 nestedLevel, NuGetNotificationMode mode, NuGetOperationReporter reporter, Func`3 nativeInstall, NuGetProject givenNuGetProject)
+
+Warning As Error: Detected package downgrade: Microsoft.EntityFrameworkCore from 9.0.5 to 9.0.1. Reference the package directly from the project to select a different version. 
+ APIMonitor.server -> Microsoft.EntityFrameworkCore.InMemory 9.0.5 -> Microsoft.EntityFrameworkCore (>= 9.0.5) 
+ APIMonitor.server -> Microsoft.EntityFrameworkCore (>= 9.0.1)
+Warning As Error: Detected package downgrade: Microsoft.Extensions.Caching.Memory from 9.0.5 to 9.0.2. Reference the package directly from the project to select a different version. 
+ APIMonitor.server -> Microsoft.EntityFrameworkCore.InMemory 9.0.5 -> Microsoft.Extensions.Caching.Memory (>= 9.0.5) 
+ APIMonitor.server -> Microsoft.Extensions.Caching.Memory (>= 9.0.2)
+@ Installing Microsoft.AspNetCore.Authorization in APIMonitor.server finished (0.097 sec)
+[Notification][Install] Install failed (project: APIMonitor.server, package: Microsoft.AspNetCore.Authorization v8.0.1)
+Package restore failed. Rolling back package changes for 'APIMonitor.server'.
+Warning As Error: Detected package downgrade: Microsoft.EntityFrameworkCore from 9.0.5 to 9.0.1. Reference the package directly from the project to select a different version. 
+ APIMonitor.server -> Microsoft.EntityFram ... g.Memory from 9.0.5 to 9.0.2. Reference the package directly from the project to select a different version. 
+ APIMonitor.server -> Microsoft.EntityFrameworkCore.InMemory 9.0.5 -> Microsoft.Extensions.Caching.Memory (>= 9.0.5) 
+ APIMonitor.server -> Microsoft.Extensions.Caching.Memory (>= 9.0.2)
+
+@ Installing Microsoft.AspNetCore.Authorization in APIMonitor.server started
+Running restore with 12 concurrent jobs.
+Reading project file /home/lyuboslav/RiderProjects/APIMonitor/APIMonitor.server/APIMonitor.server.csproj.
+Restoring packages for /home/lyuboslav/RiderProjects/APIMonitor/APIMonitor.server/APIMonitor.server.csproj...
+  GET https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.authorization/index.json
+  OK https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.authorization/index.json 181ms
+  GET https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.authorization/8.0.2/microsoft.aspnetcore.authorization.8.0.2.nupkg
+  OK https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.authorization/8.0.2/microsoft.aspnetcore.authorization.8.0.2.nupkg 51ms
+  GET https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.metadata/index.json
+  OK https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.metadata/index.json 140ms
+  GET https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.metadata/8.0.2/microsoft.aspnetcore.metadata.8.0.2.nupkg
+  OK https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.metadata/8.0.2/microsoft.aspnetcore.metadata.8.0.2.nupkg 44ms
+Acquiring lock for the installation of Microsoft.AspNetCore.Metadata 8.0.2
+Acquired lock for the installation of Microsoft.AspNetCore.Metadata 8.0.2
+Acquiring lock for the installation of Microsoft.AspNetCore.Authorization 8.0.2
+Acquired lock for the installation of Microsoft.AspNetCore.Authorization 8.0.2
+Installed Microsoft.AspNetCore.Metadata 8.0.2 from https://api.nuget.org/v3/index.json to /home/lyuboslav/.nuget/packages/microsoft.aspnetcore.metadata/8.0.2 with content hash 1m54fAfHzui+0twvU6VtUApM+aUaBR3G3YZNWxGH+c62hOFkZQX/Tm5FzptADUcr8wCPvIaRPbGx77upepk7rw==.
+Installed Microsoft.AspNetCore.Authorization 8.0.2 from https://api.nuget.org/v3/index.json to /home/lyuboslav/.nuget/packages/microsoft.aspnetcore.authorization/8.0.2 with content hash Z4fjwzXxsdk3GpNBd1SjltifmxWD0jpS3iWCxCjeXQecoQ1+1Nbgbv1ZTbQw2uDVbuEwpfz5cTmRgocG3HBNAA==.
+  CACHE https://api.nuget.org/v3/vulnerabilities/index.json
+  CACHE https://api.nuget.org/v3-vulnerabilities/2025.05.15.05.31.02/vulnerability.base.json
+  CACHE https://api.nuget.org/v3-vulnerabilities/2025.05.15.05.31.02/2025.05.17.23.31.11/vulnerability.update.json
+Warning As Error: Detected package downgrade: Microsoft.EntityFrameworkCore from 9.0.5 to 9.0.1. Reference the package directly from the project to select a different version. 
+ APIMonitor.server -> Microsoft.EntityFrameworkCore.InMemory 9.0.5 -> Microsoft.EntityFrameworkCore (>= 9.0.5) 
+ APIMonitor.server -> Microsoft.EntityFrameworkCore (>= 9.0.1)
+Warning As Error: Detected package downgrade: Microsoft.Extensions.Caching.Memory from 9.0.5 to 9.0.2. Reference the package directly from the project to select a different version. 
+ APIMonitor.server -> Microsoft.EntityFrameworkCore.InMemory 9.0.5 -> Microsoft.Extensions.Caching.Memory (>= 9.0.5) 
+ APIMonitor.server -> Microsoft.Extensions.Caching.Memory (>= 9.0.2)
+All packages and projects are compatible with net9.0.
+Package restore failed. Rolling back package changes for 'APIMonitor.server'.
+Warning As Error: Detected package downgrade: Microsoft.EntityFrameworkCore from 9.0.5 to 9.0.1. Reference the package directly from the project to select a different version. 
+ APIMonitor.server -> Microsoft.EntityFram ... g.Memory from 9.0.5 to 9.0.2. Reference the package directly from the project to select a different version. 
+ APIMonitor.server -> Microsoft.EntityFrameworkCore.InMemory 9.0.5 -> Microsoft.Extensions.Caching.Memory (>= 9.0.5) 
+ APIMonitor.server -> Microsoft.Extensions.Caching.Memory (>= 9.0.2)
+
+NuGet.PackageManagement.PackageReferenceRollbackException: Package restore failed. Rolling back package changes for 'APIMonitor.server'.
+   at NuGet.PackageManagement.NuGetPackageManager.ExecuteBuildIntegratedProjectActionsAsync(BuildIntegratedNuGetProject buildIntegratedProject, IEnumerable`1 nuGetProjectActions, INuGetProjectContext nuGetProjectContext, CancellationToken token)
+   at NuGet.PackageManagement.NuGetPackageManager.ExecuteNuGetProjectActionsAsync(NuGetProject nuGetProject, IEnumerable`1 nuGetProjectActions, INuGetProjectContext nuGetProjectContext, PackageDownloadContext downloadContext, CancellationToken token)
+   at NuGet.PackageManagement.NuGetPackageManager.InstallPackageAsync(NuGetProject nuGetProject, PackageIdentity packageIdentity, ResolutionContext resolutionContext, INuGetProjectContext nuGetProjectContext, PackageDownloadContext downloadContext, IEnumerable`1 primarySources, IEnumerable`1 secondarySources, CancellationToken token)
+   at NuGet.PackageManagement.NuGetPackageManager.InstallPackageAsync(NuGetProject nuGetProject, PackageIdentity packageIdentity, ResolutionContext resolutionContext, INuGetProjectContext nuGetProjectContext, IEnumerable`1 primarySources, IEnumerable`1 secondarySources, CancellationToken token)
+   at JetBrains.ProjectModel.NuGet.Operations.NuGetInstallOperation.<>c__DisplayClass7_0.<<InstallAsync>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at JetBrains.ProjectModel.NuGet.Operations.NuGetInstallOperation.InstallInternal(IProject project, String packageId, String packgeUserStr, NuGetFeedContext feedContext, Int32 nestedLevel, NuGetNotificationMode mode, NuGetOperationReporter reporter, Func`3 nativeInstall, NuGetProject givenNuGetProject)
+
+Warning As Error: Detected package downgrade: Microsoft.EntityFrameworkCore from 9.0.5 to 9.0.1. Reference the package directly from the project to select a different version. 
+ APIMonitor.server -> Microsoft.EntityFrameworkCore.InMemory 9.0.5 -> Microsoft.EntityFrameworkCore (>= 9.0.5) 
+ APIMonitor.server -> Microsoft.EntityFrameworkCore (>= 9.0.1)
+Warning As Error: Detected package downgrade: Microsoft.Extensions.Caching.Memory from 9.0.5 to 9.0.2. Reference the package directly from the project to select a different version. 
+ APIMonitor.server -> Microsoft.EntityFrameworkCore.InMemory 9.0.5 -> Microsoft.Extensions.Caching.Memory (>= 9.0.5) 
+ APIMonitor.server -> Microsoft.Extensions.Caching.Memory (>= 9.0.2)
+@ Installing Microsoft.AspNetCore.Authorization in APIMonitor.server finished (0.524 sec)
+[Notification][Install] Install failed (project: APIMonitor.server, package: Microsoft.AspNetCore.Authorization v8.0.2)
+Package restore failed. Rolling back package changes for 'APIMonitor.server'.
+Warning As Error: Detected package downgrade: Microsoft.EntityFrameworkCore from 9.0.5 to 9.0.1. Reference the package directly from the project to select a different version. 
+ APIMonitor.server -> Microsoft.EntityFram ... g.Memory from 9.0.5 to 9.0.2. Reference the package directly from the project to select a different version. 
+ APIMonitor.server -> Microsoft.EntityFrameworkCore.InMemory 9.0.5 -> Microsoft.Extensions.Caching.Memory (>= 9.0.5) 
+ APIMonitor.server -> Microsoft.Extensions.Caching.Memory (>= 9.0.2)
+
+
+
+## AI Assistant
+I notice you're having package dependency conflicts while trying to install Microsoft.AspNetCore.Authorization. The error messages indicate there are package version mismatches in your project:
+
+1. There's a downgrade conflict with Microsoft.EntityFrameworkCore (trying to downgrade from 9.0.5 to 9.0.1)
+2. There's a downgrade conflict with Microsoft.Extensions.Caching.Memory (trying to downgrade from 9.0.5 to 9.0.2)
+
+To resolve these issues, you should update the conflicting packages to their higher versions. Here's what you need to do:
+
+1. Update Microsoft.EntityFrameworkCore to version 9.0.5 to match the version required by EntityFrameworkCore.InMemory
+2. Update Microsoft.Extensions.Caching.Memory to version 9.0.5
+
+Let me provide the necessary commands to do this. I'll use Rider's documentation search to get the most accurate information about package management.
+
+Based on the error messages, it appears there are package version conflicts in your project. Specifically, there are package downgrades for:
+
+1. Microsoft.EntityFrameworkCore (trying to downgrade from 9.0.5 to 9.0.1)
+2. Microsoft.Extensions.Caching.Memory (trying to downgrade from 9.0.5 to 9.0.2)
+
+To resolve this, you need to update these packages to their latest compatible versions. You can do this through the NuGet package manager in Rider:
+
+1. Open the NuGet window by pressing `Alt` `7` [[1]](https://www.jetbrains.com/help/rider/2025.1/Using_NuGet.html)
+
+2. Click on the "Upgrade Packages in Solution" button in the NuGet window toolbar [[2]](https://www.jetbrains.com/help/rider/2025.1/Using_NuGet.html#restoring)
+
+3. Make sure both packages are updated to the same version (9.0.5) to maintain consistency:
+   - Microsoft.EntityFrameworkCore
+   - Microsoft.Extensions.Caching.Memory
+
+Alternatively, you can use the NuGet Quick List:
+
+1. Press `Alt` `Shift` `N` to open the NuGet Quick List
+2. Select the restore/update option to manage your packages
+
+After updating these packages, try installing the Microsoft.AspNetCore.Authorization package again. Make sure to install a version that's compatible with your other packages (preferably the latest stable version that matches your target framework).
+
+If you continue to have issues, you might want to:
+
+1. Clean the solution
+2. Delete the `bin` and `obj` folders
+3. Restore NuGet packages again
+
+You can also check your package dependencies and versions in your .csproj file to ensure they're consistent.
+
+## Me
+Is there a dotnet nuget all my packets down to .Net 8
+
+## AI Assistant
+Let me check if there's a way to downgrade all packages to .NET 8 compatible versions.
+
+Yes, you can downgrade your packages to be compatible with .NET 8. Here's how to do it:
+
+1. First, update your project file (.csproj) to target .NET 8:
+
+```xml
+<PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+</PropertyGroup>
+```
+
+
+2. Then you can use the following approach to downgrade the packages [[1]](https://www.stefanschick.eu/posts/0006-csharpnetcorenugetpackagedowngrade/):
+
+```shell script
+dotnet restore
+```
+
+
+3. For specific packages that need manual downgrading [[5]](https://learn.microsoft.com/en-us/nuget/consume-packages/install-use-packages-dotnet-cli), use:
+
+```shell script
+dotnet add package Microsoft.EntityFrameworkCore --version 8.0.3
+dotnet add package Microsoft.EntityFrameworkCore.InMemory --version 8.0.3
+dotnet add package Microsoft.Extensions.Caching.Memory --version 8.0.3
+dotnet add package Microsoft.AspNetCore.Authorization --version 8.0.3
+```
+
+
+After making these changes:
+
+1. Clean your solution
+2. Delete the `bin` and `obj` folders in your project directories
+3. Run `dotnet restore` again
+
+This should resolve the package version conflicts and ensure all packages are using compatible .NET 8 versions. The version 8.0.3 is recommended as it's a stable release of .NET 8 packages.
+
+If you're using Rider, you can also do this through the UI:
+
+1. Press `Alt` `7` to open the NuGet window
+2. Look for the installed packages
+3. Select each package and choose version 8.0.3 from the version dropdown
+4. Apply the changes
+
+Remember to update all related packages to the same version to maintain consistency and avoid dependency conflicts.
+
+## Me
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>aspnet-APIMonitor.server-ca1d1a9c-7a19-4d50-ac7d-11879e43a97c</UserSecretsId>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AspNet.Security.OAuth.GitHub" Version="9.0.0" />
+        <PackageReference Include="AspNetCoreRateLimit" Version="5.0.0" />
+        <PackageReference Include="AutoMapper" Version="13.0.1" />
+        <PackageReference Include="Azure.Communication.Sms" Version="1.0.1" />
+        <PackageReference Include="CsvHelper" Version="33.0.1" />
+        <PackageReference Include="FluentEmail.Core" Version="3.0.2" />
+        <PackageReference Include="FluentEmail.Smtp" Version="3.0.2" />
+        <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
+        <PackageReference Include="IPinfo" Version="3.0.1" />
+        <PackageReference Include="MailKit" Version="4.10.0" />
+        <PackageReference Include="MaxMind.GeoIP2" Version="5.2.0" />
+        <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.3.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.Cookies" Version="2.3.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook" Version="9.0.2" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="9.0.2" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.1" NoWarn="NU1605" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="9.0.2" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="9.0.1" NoWarn="NU1605" />
+        <PackageReference Include="Microsoft.AspNetCore.HttpOverrides" Version="2.3.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.1" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.1" />
+        <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.0" />
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Core" Version="1.2.0" />
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.Json" Version="9.0.2" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.1" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.5" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.1" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.1">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.2" />
+        <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.2" />
+        <PackageReference Include="Microsoft.Extensions.Http.Diagnostics" Version="9.2.0" />
+        <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="9.0.2" />
+        <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="9.2.0" />
+        <PackageReference Include="Microsoft.Identity.Web" Version="3.0.0" />
+        <PackageReference Include="Microsoft.Identity.Web.DownstreamApi" Version="3.0.0" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+        <PackageReference Include="Moq" Version="4.20.72" />
+        <PackageReference Include="MySql.Data" Version="9.3.0" />
+        <PackageReference Include="MySql.EntityFrameworkCore" Version="9.0.0" />
+        <PackageReference Include="MySqlConnector" Version="2.4.0" />
+        <PackageReference Include="Otp.NET" Version="1.4.0" />
+        <PackageReference Include="PacketDotNet" Version="1.4.7" />
+        <PackageReference Include="Polly" Version="8.5.2" />
+        <PackageReference Include="Polly.Core" Version="8.5.2" />
+        <PackageReference Include="Polly.Extensions" Version="8.5.2" />
+        <PackageReference Include="Polly.Extensions.Http" Version="3.0.0" />
+        <PackageReference Include="QRCoder" Version="1.6.0" />
+        <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+        <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+        <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+        <PackageReference Include="Serilog.Sinks.MSSqlServer" Version="8.1.1-dev-00122" />
+        <PackageReference Include="Serilog.Sinks.Seq" Version="9.0.0" />
+        <PackageReference Include="SharpPcap" Version="6.3.0" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
+        <PackageReference Include="System.Net.Http" Version="4.3.4" />
+        <PackageReference Include="Twilio" Version="7.8.4" />
+        <PackageReference Include="xunit" Version="2.9.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Resources\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="Resources\GeoLite2-City.mmdb">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
+    </ItemGroup>
+
+</Project>
+
+
+## AI Assistant
+Looking at your project file, I'll help you downgrade all packages to .NET 8 compatible versions. Here's the modified version of your project file with .NET 8 compatible packages:
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>aspnet-APIMonitor.server-ca1d1a9c-7a19-4d50-ac7d-11879e43a97c</UserSecretsId>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AspNet.Security.OAuth.GitHub" Version="8.0.0" />
+        <PackageReference Include="AspNetCoreRateLimit" Version="5.0.0" />
+        <PackageReference Include="AutoMapper" Version="13.0.1" />
+        <PackageReference Include="Azure.Communication.Sms" Version="1.0.1" />
+        <PackageReference Include="CsvHelper" Version="31.0.0" />
+        <PackageReference Include="FluentEmail.Core" Version="3.0.2" />
+        <PackageReference Include="FluentEmail.Smtp" Version="3.0.2" />
+        <PackageReference Include="FluentValidation.AspNetCore" Version="11.9.0" />
+        <PackageReference Include="IPinfo" Version="3.0.1" />
+        <PackageReference Include="MailKit" Version="4.3.0" />
+        <PackageReference Include="MaxMind.GeoIP2" Version="5.2.0" />
+        <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook" Version="8.0.3" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.3" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.3" NoWarn="NU1605" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="8.0.3" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.3" NoWarn="NU1605" />
+        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.3" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.3" />
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.Json" Version="8.0.3" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.3" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.3" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.3" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.3">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.3" />
+        <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.3" />
+        <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="8.0.3" />
+        <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="8.0.3" />
+        <PackageReference Include="Microsoft.Identity.Web" Version="2.17.1" />
+        <PackageReference Include="Microsoft.Identity.Web.DownstreamApi" Version="2.17.1" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
+        <PackageReference Include="Moq" Version="4.20.70" />
+        <PackageReference Include="MySql.Data" Version="8.3.0" />
+        <PackageReference Include="MySql.EntityFrameworkCore" Version="8.0.0" />
+        <PackageReference Include="MySqlConnector" Version="2.3.5" />
+        <PackageReference Include="Otp.NET" Version="1.3.0" />
+        <PackageReference Include="PacketDotNet" Version="1.4.7" />
+        <PackageReference Include="Polly" Version="8.2.1" />
+        <PackageReference Include="Polly.Core" Version="8.2.1" />
+        <PackageReference Include="Polly.Extensions" Version="8.2.1" />
+        <PackageReference Include="Polly.Extensions.Http" Version="3.0.0" />
+        <PackageReference Include="QRCoder" Version="1.4.3" />
+        <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
+        <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
+        <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+        <PackageReference Include="Serilog.Sinks.MSSqlServer" Version="6.5.1" />
+        <PackageReference Include="Serilog.Sinks.Seq" Version="6.0.0" />
+        <PackageReference Include="SharpPcap" Version="6.3.0" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+        <PackageReference Include="System.Net.Http" Version="4.3.4" />
+        <PackageReference Include="Twilio" Version="6.18.0" />
+        <PackageReference Include="xunit" Version="2.7.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Resources\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="Resources\GeoLite2-City.mmdb">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
+    </ItemGroup>
+
+</Project>
+```
+
+
+Key changes made:
+1. Changed `TargetFramework` from `net9.0` to `net8.0`
+2. Updated all Microsoft.AspNetCore.* packages to 8.0.3 (latest stable .NET 8 version)
+3. Updated Microsoft.EntityFrameworkCore.* packages to 8.0.3
+4. Updated Microsoft.Extensions.* packages to 8.0.3
+5. Removed deprecated packages:
+   - Microsoft.AspNetCore.Authentication (2.3.0)
+   - Microsoft.AspNetCore.Authentication.Cookies (2.3.0)
+   - Microsoft.AspNetCore.HttpOverrides (2.3.0)
+   - Microsoft.AspNetCore.SignalR (1.2.0)
+   - Microsoft.AspNetCore.SignalR.Core (1.2.0)
+   (These are now included in the framework)
+6. Updated other packages to their latest .NET 8 compatible versions
+
+After making these changes:
+1. Save the file
+2. Delete the `bin` and `obj` folders in your project
+3. Run:
+```shell script
+dotnet restore
+```
+
+
+This should resolve the package conflicts and provide you with a stable .NET 8 environment. Note that some packages like AutoMapper (13.0.1) are kept at their current version as they are compatible with both .NET 8 and 9.

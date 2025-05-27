@@ -15,8 +15,9 @@ public class ApiScanResult
     
     [Required]
     public LatencyMetrics Latency { get; set; }
-    
+
     [Required]
+    [NotMapped]
     public List<string> Headers { get; set; }
     
     [MaxLength(500)]
@@ -28,7 +29,8 @@ public class ApiScanResult
     
     [MaxLength(20)]
     public string ColorHint { get; set; }
-    
+
     [Required]
+    [NotMapped]
     public List<PacketInfo> Packets { get; set; }
 }

@@ -20,6 +20,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using MySqlConnector;
 using Serilog;
 using SharpPcap;
 
@@ -38,7 +39,7 @@ internal class Program
             .CreateLogger();
 
         builder.Host.UseSerilog();
-        
+
         builder.Services.AddLogging(logging => logging.AddSerilog());
 
         builder.Services.AddSingleton<ICaptureDevice>(provider =>
@@ -49,12 +50,13 @@ internal class Program
             {
                 throw new InvalidOperationException("No capture devices found on this machine.");
             }
-            
+
             ILiveDevice? device = devices[0];
 
             return device;
         });
-        
+
+
         builder.Services.AddHttpClient<IApiScannerService, ApiScannerService>()
             .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
             {
@@ -64,20 +66,22 @@ internal class Program
                     IPAddress[] addresses = await Dns.GetHostAddressesAsync(context.DnsEndPoint.Host, cancellationToken);
                     dnsStopWatch.Stop();
                     context.InitialRequestMessage.Headers.Add("X-Dns-Time", dnsStopWatch.ElapsedMilliseconds.ToString());
-                    
+
                     Stopwatch connectWatch = Stopwatch.StartNew();
                     Socket socket = new(SocketType.Stream, ProtocolType.Tcp);
                     await socket.ConnectAsync(addresses, context.DnsEndPoint.Port, cancellationToken);
                     connectWatch.Stop();
                     context.InitialRequestMessage.Headers.Add("X-Connect-Time", connectWatch.ElapsedMilliseconds.ToString());
-                    
+
                     return new NetworkStream(socket, true);
                 }
             });
 
         string connectionString = builder.Configuration.GetConnectionString("DefaultConnection")!;
 
-        builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseMySQL(connectionString).EnableSensitiveDataLogging());
+        builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+
+
 
         builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
             {
@@ -146,7 +150,7 @@ internal class Program
         builder.Services.AddScoped<IRateLimitService, RateLimitService>();
         builder.Services.AddScoped<RoleManager<IdentityRole<int>>>();
         builder.Services.AddScoped<IThreatDetectionService, ThreatDetectionService>();
-        
+
         builder.Services.AddDataProtection();
 
         builder.Services.AddAutoMapper(typeof(Program));

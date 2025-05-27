@@ -18,17 +18,19 @@ namespace APIMonitor.server.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "9.0.1")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
-
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+                .HasAnnotation("Relational:MaxIdentifierLength", 128)
+                .HasAnnotation("SqlServer:IdentityIncrement", 1)
+                .HasAnnotation("SqlServer:IdentitySeed", 1L)
+                .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
             modelBuilder.Entity("APIMonitor.server.Identity.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
+                        .HasAnnotation("SqlServer:IdentitySeed", 1L)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
@@ -44,7 +46,7 @@ namespace APIMonitor.server.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
-                    b.Property<bool>("EmailConfirmed")
+                    b.Property<ulong>("EmailConfirmed")
                         .HasColumnType("bit");
 
                     b.Property<int>("FailedLoginAttempts")
@@ -54,17 +56,17 @@ namespace APIMonitor.server.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<bool>("IsAdmin")
+                    b.Property<ulong>("IsAdmin")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsLockedOut")
+                    b.Property<ulong>("IsLockedOut")
                         .HasColumnType("bit");
 
                     b.Property<string>("LastName")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<bool>("LockoutEnabled")
+                    b.Property<ulong>("LockoutEnabled")
                         .HasColumnType("bit");
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
@@ -84,7 +86,7 @@ namespace APIMonitor.server.Migrations
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("PhoneNumberConfirmed")
+                    b.Property<ulong>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
                     b.Property<string>("RefreshToken")
@@ -94,13 +96,13 @@ namespace APIMonitor.server.Migrations
                     b.Property<DateTimeOffset>("RefreshTokenExpiry")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<bool>("RememberMe")
+                    b.Property<ulong>("RememberMe")
                         .HasColumnType("bit");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("TwoFactorEnabled")
+                    b.Property<ulong>("TwoFactorEnabled")
                         .HasColumnType("bit");
 
                     b.Property<string>("UserName")
@@ -124,9 +126,10 @@ namespace APIMonitor.server.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
+                        .HasAnnotation("SqlServer:IdentitySeed", 1L)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("Condition")
                         .IsRequired()
@@ -138,7 +141,7 @@ namespace APIMonitor.server.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<bool>("IsActive")
+                    b.Property<ulong>("IsActive")
                         .HasColumnType("bit");
 
                     b.Property<string>("RuleName")
@@ -151,18 +154,19 @@ namespace APIMonitor.server.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AlertRules");
+                    b.ToTable("AlertRules", (string)null);
                 });
 
             modelBuilder.Entity("APIMonitor.server.Models.ApiEndpoint", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
+                        .HasAnnotation("SqlServer:IdentitySeed", 1L)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("IsActive")
+                    b.Property<ulong>("IsActive")
                         .HasColumnType("bit");
 
                     b.Property<string>("Url")
@@ -171,16 +175,17 @@ namespace APIMonitor.server.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ApiEndpoints");
+                    b.ToTable("ApiEndpoints", (string)null);
                 });
 
             modelBuilder.Entity("APIMonitor.server.Models.ApiMetrics", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
+                        .HasAnnotation("SqlServer:IdentitySeed", 1L)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<TimeSpan>("AverageResponseTime")
                         .HasColumnType("time");
@@ -203,16 +208,17 @@ namespace APIMonitor.server.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ApiMetrics");
+                    b.ToTable("ApiMetrics", (string)null);
                 });
 
             modelBuilder.Entity("APIMonitor.server.Models.ApiRequestLog", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
+                        .HasAnnotation("SqlServer:IdentitySeed", 1L)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("Endpoint")
                         .IsRequired()
@@ -252,16 +258,17 @@ namespace APIMonitor.server.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ApiRequestLogs");
+                    b.ToTable("ApiRequestLogs", (string)null);
                 });
 
             modelBuilder.Entity("APIMonitor.server.Models.ApiScanResult", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
+                        .HasAnnotation("SqlServer:IdentitySeed", 1L)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("BodySnippet")
                         .IsRequired()
@@ -273,7 +280,7 @@ namespace APIMonitor.server.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.PrimitiveCollection<string>("Headers")
+                    b.Property<string>("Headers")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -294,16 +301,17 @@ namespace APIMonitor.server.Migrations
 
                     b.HasIndex("LatencyId");
 
-                    b.ToTable("ApiScanResults");
+                    b.ToTable("ApiScanResults", (string)null);
                 });
 
             modelBuilder.Entity("APIMonitor.server.Models.AuditLog", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
+                        .HasAnnotation("SqlServer:IdentitySeed", 1L)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("Action")
                         .IsRequired()
@@ -346,16 +354,17 @@ namespace APIMonitor.server.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AuditLogs");
+                    b.ToTable("AuditLogs", (string)null);
                 });
 
             modelBuilder.Entity("APIMonitor.server.Models.BannedIp", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
+                        .HasAnnotation("SqlServer:IdentitySeed", 1L)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<DateTime>("BannedUntil")
                         .HasColumnType("datetime2");
@@ -371,16 +380,17 @@ namespace APIMonitor.server.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("BannedIps");
+                    b.ToTable("BannedIps", (string)null);
                 });
 
             modelBuilder.Entity("APIMonitor.server.Models.BotDetectionLog", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
+                        .HasAnnotation("SqlServer:IdentitySeed", 1L)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("BotSignature")
                         .IsRequired()
@@ -407,16 +417,17 @@ namespace APIMonitor.server.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("BotDetectionLogs");
+                    b.ToTable("BotDetectionLogs", (string)null);
                 });
 
             modelBuilder.Entity("APIMonitor.server.Models.EventLog", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
+                        .HasAnnotation("SqlServer:IdentitySeed", 1L)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -436,16 +447,17 @@ namespace APIMonitor.server.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("EventLogs");
+                    b.ToTable("EventLogs", (string)null);
                 });
 
             modelBuilder.Entity("APIMonitor.server.Models.IpBlock", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
+                        .HasAnnotation("SqlServer:IdentitySeed", 1L)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<DateTime>("BlockedUntil")
                         .HasColumnType("datetime2");
@@ -465,16 +477,17 @@ namespace APIMonitor.server.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("IpBlocks");
+                    b.ToTable("IpBlocks", (string)null);
                 });
 
             modelBuilder.Entity("APIMonitor.server.Models.LatencyMetrics", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
+                        .HasAnnotation("SqlServer:IdentitySeed", 1L)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("Connect")
                         .IsRequired()
@@ -493,21 +506,19 @@ namespace APIMonitor.server.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("LatencyMetrics");
+                    b.ToTable("LatencyMetrics", (string)null);
                 });
 
             modelBuilder.Entity("APIMonitor.server.Models.Notification", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool>("IsRead")
+                    b.Property<ulong>("IsRead")
                         .HasColumnType("bit");
 
                     b.Property<string>("Message")
@@ -530,21 +541,22 @@ namespace APIMonitor.server.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("APIMonitor.server.Models.NotificationPreference", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
+                        .HasAnnotation("SqlServer:IdentitySeed", 1L)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("EnableCriticalAlertsOnly")
+                    b.Property<ulong>("EnableCriticalAlertsOnly")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("EnablePush")
+                    b.Property<ulong>("EnablePush")
                         .HasColumnType("bit");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -557,16 +569,17 @@ namespace APIMonitor.server.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("NotificationPreferences");
+                    b.ToTable("NotificationPreferences", (string)null);
                 });
 
             modelBuilder.Entity("APIMonitor.server.Models.PacketInfo", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
+                        .HasAnnotation("SqlServer:IdentitySeed", 1L)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<int?>("ApiScanResultId")
                         .HasColumnType("int");
@@ -611,16 +624,17 @@ namespace APIMonitor.server.Migrations
 
                     b.HasIndex("ApiScanResultId");
 
-                    b.ToTable("PacketInfos");
+                    b.ToTable("PacketInfos", (string)null);
                 });
 
             modelBuilder.Entity("APIMonitor.server.Models.RateLimitRule", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
+                        .HasAnnotation("SqlServer:IdentitySeed", 1L)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("Action")
                         .IsRequired()
@@ -632,7 +646,7 @@ namespace APIMonitor.server.Migrations
                         .HasMaxLength(15)
                         .HasColumnType("nvarchar(15)");
 
-                    b.Property<bool>("IsActive")
+                    b.Property<ulong>("IsActive")
                         .HasColumnType("bit");
 
                     b.Property<int>("MaxRequests")
@@ -643,16 +657,17 @@ namespace APIMonitor.server.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("RateLimitRules");
+                    b.ToTable("RateLimitRules", (string)null);
                 });
 
             modelBuilder.Entity("APIMonitor.server.Models.RateLimitViolation", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
+                        .HasAnnotation("SqlServer:IdentitySeed", 1L)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("Action")
                         .IsRequired()
@@ -676,16 +691,17 @@ namespace APIMonitor.server.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("RateLimitViolations");
+                    b.ToTable("RateLimitViolations", (string)null);
                 });
 
             modelBuilder.Entity("APIMonitor.server.Models.RequestStatistics", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
+                        .HasAnnotation("SqlServer:IdentitySeed", 1L)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<int>("AverageRequestsCount")
                         .HasColumnType("int");
@@ -698,16 +714,17 @@ namespace APIMonitor.server.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("RequestStatistics");
+                    b.ToTable("RequestStatistics", (string)null);
                 });
 
             modelBuilder.Entity("APIMonitor.server.Models.ThreatAlert", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
+                        .HasAnnotation("SqlServer:IdentitySeed", 1L)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<int>("AlertType")
                         .HasColumnType("int");
@@ -722,7 +739,7 @@ namespace APIMonitor.server.Migrations
                         .HasMaxLength(15)
                         .HasColumnType("nvarchar(15)");
 
-                    b.Property<bool>("IsResolved")
+                    b.Property<ulong>("IsResolved")
                         .HasColumnType("bit");
 
                     b.Property<DateTime?>("ResolvedAt")
@@ -736,16 +753,17 @@ namespace APIMonitor.server.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ThreatAlerts");
+                    b.ToTable("ThreatAlerts", (string)null);
                 });
 
             modelBuilder.Entity("APIMonitor.server.Models.TokenResponse", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
+                        .HasAnnotation("SqlServer:IdentitySeed", 1L)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("AccessToken")
                         .IsRequired()
@@ -759,16 +777,17 @@ namespace APIMonitor.server.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TokenResponses");
+                    b.ToTable("TokenResponses", (string)null);
                 });
 
             modelBuilder.Entity("APIMonitor.server.Models.TrustedDevice", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
+                        .HasAnnotation("SqlServer:IdentitySeed", 1L)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -790,16 +809,17 @@ namespace APIMonitor.server.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TrustedDevices");
+                    b.ToTable("TrustedDevices", (string)null);
                 });
 
             modelBuilder.Entity("APIMonitor.server.Models.UserActivityLog", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
+                        .HasAnnotation("SqlServer:IdentitySeed", 1L)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<int>("Action")
                         .HasColumnType("int");
@@ -818,7 +838,7 @@ namespace APIMonitor.server.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<bool>("IsSuccessful")
+                    b.Property<ulong>("IsSuccessful")
                         .HasColumnType("bit");
 
                     b.Property<DateTime>("Timestamp")
@@ -835,16 +855,17 @@ namespace APIMonitor.server.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserActivityLogs");
+                    b.ToTable("UserActivityLogs", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<int>", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
+                        .HasAnnotation("SqlServer:IdentitySeed", 1L)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -872,9 +893,10 @@ namespace APIMonitor.server.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
+                        .HasAnnotation("SqlServer:IdentitySeed", 1L)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("ClaimType")
                         .HasColumnType("nvarchar(max)");
@@ -896,9 +918,10 @@ namespace APIMonitor.server.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
+                        .HasAnnotation("SqlServer:IdentitySeed", 1L)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("ClaimType")
                         .HasColumnType("nvarchar(max)");

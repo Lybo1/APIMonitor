@@ -4,3 +4,21 @@
     build:
       context: .
       dockerfile: AuthApi/Dockerfile
+  webapplication1:
+    image: webapplication1
+    build:
+      context: .
+      dockerfile: WebApplication1/Dockerfile
+
+  securityapi:
+    image: securityapi
+    build:
+      context: .
+      dockerfile: SecurityApi/Dockerfile
+
+  securityapi-1:
+    image: securityapi-1
+    build:
+      context: .
+      dockerfile: SecurityApi/Dockerfile
+
