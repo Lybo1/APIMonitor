@@ -49,23 +49,21 @@ Whether running as a desktop app or web backend, it’s designed to operate 24/7
 ## 🧱 Architecture Overview
 
 ### 🖥️ Frontend
-| Language | Usage |
-|=============================================================|
-| **Angular + TypeScript** | Web dashboard                    |
-| **Swift**                | macOS/iOS UI                     |
-| **Kotlin**               | Android client                   |
-| **C++**                  | Windows and Linux native clients |
-|=============================================================|
+| Language              | Usage                     |
+|-----------------------|---------------------------|
+| Angular + TypeScript | Web dashboard              |
+| Swift                | macOS/iOS UI               |
+| Kotlin               | Android client             |
+| C++ (Qt)             | Windows/Linux native client|
 
 ### 🔙 Backend
-| Language | Purpose |
-|====================================================================|
-| **C** | Raw packet inspection, Layer 2 (OSI) and above interface   |
-| **C++ (Qt)** | Native desktop UI                                   |
-| **C# (ASP.NET)** | Core backend, API layer                         |
-| **Elixir** | Concurrency engine, pub/sub, protocol coordination    |
-| **Julia** | Data modeling, statistics, anomaly detection (planned) |
-|====================================================================|
+| Language        | Purpose                                          |
+|-----------------|--------------------------------------------------|
+| C               | Raw packet inspection, Layer 2+ interface        |
+| C# (ASP.NET)    | Core backend, API layer                          |
+| Elixir          | Concurrency engine, pub/sub, protocol coordination|
+| Julia           | Data modeling, statistics, anomaly detection     |
+
 
 ---
 
