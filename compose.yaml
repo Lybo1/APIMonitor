@@ -22,3 +22,9 @@
       context: .
       dockerfile: SecurityApi/Dockerfile
 
+  gateway:
+    image: gateway
+    build:
+      context: .
+      dockerfile: Gateway/Dockerfile
+
