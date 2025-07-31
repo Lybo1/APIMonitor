@@ -1,0 +1,70 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AutoMapper" Version="15.0.1" />
+        <PackageReference Include="FluentValidation" Version="12.0.0" />
+        <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
+        <PackageReference Include="Grpc.Net.Client" Version="2.71.0" />
+        <PackageReference Include="Grpc.Tools" Version="2.72.0">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="HotChocolate.AspNetCore" Version="15.1.8" />
+        <PackageReference Include="HotChocolate.AspNetCore.Authorization" Version="15.1.8" />
+        <PackageReference Include="HotChocolate.Execution" Version="15.1.8" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.7" />
+        <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.7" />
+        <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="9.7.0" />
+        <PackageReference Include="NATS.Client.JetStream" Version="2.6.5" />
+        <PackageReference Include="StackExchange.Redis" Version="2.8.58" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Adapters\" />
+      <Folder Include="Authentication\" />
+      <Folder Include="Configuration\" />
+      <Folder Include="Contracts\Events\" />
+      <Folder Include="Contracts\Inputs\" />
+      <Folder Include="Contracts\Outputs\" />
+      <Folder Include="Contracts\Shared\" />
+      <Folder Include="Extensions\" />
+      <Folder Include="GraphQL\Extensions\" />
+      <Folder Include="GraphQL\Inputs\" />
+      <Folder Include="GraphQL\Mutations\" />
+      <Folder Include="GraphQL\Queries\" />
+      <Folder Include="GraphQL\Subscriptions\" />
+      <Folder Include="GraphQL\Types\" />
+      <Folder Include="Logging\" />
+      <Folder Include="Mappers\" />
+      <Folder Include="Messaging\Kafka\Config\" />
+      <Folder Include="Messaging\Kafka\Consumers\" />
+      <Folder Include="Messaging\Kafka\Producers\" />
+      <Folder Include="Messaging\NATS\Config\" />
+      <Folder Include="Messaging\NATS\Handlers\" />
+      <Folder Include="Messaging\NATS\Publishers\" />
+      <Folder Include="Middleware\" />
+      <Folder Include="Observability\" />
+      <Folder Include="Redis\Clients\" />
+      <Folder Include="Redis\Extensions\" />
+      <Folder Include="Services\Interfaces\" />
+      <Folder Include="Shared\Constants\" />
+      <Folder Include="Shared\Enums\" />
+      <Folder Include="Shared\Security\" />
+      <Folder Include="Validators\" />
+      <Folder Include="Vault\" />
+    </ItemGroup>
+
+</Project>

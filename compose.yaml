@@ -28,3 +28,15 @@
       context: .
       dockerfile: Gateway/Dockerfile
 
+  mailapi:
+    image: mailapi
+    build:
+      context: .
+      dockerfile: MailApi/Dockerfile
+
+  auditlogapi:
+    image: auditlogapi
+    build:
+      context: .
+      dockerfile: AuditLogApi/Dockerfile
+

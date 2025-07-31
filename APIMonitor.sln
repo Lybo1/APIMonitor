@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecurityApi", "SecurityApi\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gateway", "Gateway\Gateway.csproj", "{DC0E47A0-B5A8-421B-A982-2E992DC8F2D4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MailApi", "MailApi\MailApi.csproj", "{70C32B4E-58CE-40E8-B0E0-9C3C07E06137}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuditLogApi", "AuditLogApi\AuditLogApi.csproj", "{ED4A8E7B-0593-4E3A-8BE3-E6CAC38ABB22}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,5 +33,13 @@ Global
 		{DC0E47A0-B5A8-421B-A982-2E992DC8F2D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DC0E47A0-B5A8-421B-A982-2E992DC8F2D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DC0E47A0-B5A8-421B-A982-2E992DC8F2D4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{70C32B4E-58CE-40E8-B0E0-9C3C07E06137}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70C32B4E-58CE-40E8-B0E0-9C3C07E06137}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70C32B4E-58CE-40E8-B0E0-9C3C07E06137}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70C32B4E-58CE-40E8-B0E0-9C3C07E06137}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ED4A8E7B-0593-4E3A-8BE3-E6CAC38ABB22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED4A8E7B-0593-4E3A-8BE3-E6CAC38ABB22}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED4A8E7B-0593-4E3A-8BE3-E6CAC38ABB22}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED4A8E7B-0593-4E3A-8BE3-E6CAC38ABB22}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
