@@ -1,21 +1,9 @@
-using HotChocolate;
-using HotChocolate.AspNetCore;
-
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-builder.Services
-       .AddGraphQLServer()
-       .AddQueryType<Query>()
-       .AddAuthorization();
+builder.Services .AddGraphQLServer();
 
 WebApplication app = builder.Build();
 
-app.MapGraphQL();
-app.MapGet("/", () => "GraphQL API is running. Use /graphql endpoint.");
+app.MapGraphQL("/");
 
 app.Run();
-
-internal sealed class Query
-{
-    public string Hello() => "Hello World!";
-}

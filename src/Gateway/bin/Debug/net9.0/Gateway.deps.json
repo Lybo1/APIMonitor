@@ -1027,7 +1027,14 @@
           }
         }
       },
-      "System.IO.Pipelines/9.0.7": {},
+      "System.IO.Pipelines/9.0.7": {
+        "runtime": {
+          "lib/net9.0/System.IO.Pipelines.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.725.31616"
+          }
+        }
+      },
       "System.Text.Json/8.0.5": {},
       "System.Threading.RateLimiting/8.0.0": {},
       "Yarp.ReverseProxy/2.3.0": {
